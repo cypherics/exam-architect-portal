@@ -66,7 +66,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				coral: '#FF6F61',
+				teal: '#32B2C9',
+				'cool-gray': '#B0BEC5',
+				'light-gray': '#E4E4E4',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -89,11 +93,33 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-soft': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' },
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-soft': 'pulse-soft 2s infinite ease-in-out',
+				'float': 'float 3s infinite ease-in-out',
+			},
+			boxShadow: {
+				'soft': '0 4px 14px 0 rgba(0, 0, 0, 0.05)',
+				'card': '0 2px 8px rgba(0, 0, 0, 0.08)',
+				'elevation': '0 4px 18px rgba(0, 0, 0, 0.1)',
+				'button': '0 2px 4px rgba(0, 118, 255, 0.25)',
+			},
+			backgroundImage: {
+				'gradient-landing': 'linear-gradient(135deg, #E5F3FF 0%, #FFFFFF 100%)',
+				'gradient-card': 'linear-gradient(180deg, #FFFFFF 0%, #F9FAFC 100%)',
+				'gradient-header': 'linear-gradient(90deg, #007BFF 0%, #32B2C9 100%)',
+				'gradient-coral': 'linear-gradient(90deg, #FF6F61 0%, #FF9671 100%)',
 			}
 		}
 	},
