@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -80,7 +81,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-poppins;
   }
 
   .rtl {
@@ -90,19 +91,84 @@
 
 /* Custom styles for the application */
 .section-container {
-  @apply border rounded-lg p-4 mb-4 bg-card;
+  @apply border rounded-lg p-4 mb-4 bg-card shadow-sm transition-all duration-300 hover:shadow-md;
 }
 
 .question-container {
-  @apply border rounded-lg p-4 mb-2 bg-white;
+  @apply border rounded-lg p-4 mb-2 bg-white transition-all duration-200;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg;
+}
+
+/* Button hover animations */
+.btn-hover {
+  @apply transition-all duration-300 hover:scale-105;
+}
+
+/* Underline animation for form elements */
+.input-underline {
+  @apply transition-all duration-300 border-b-2 border-transparent focus:border-primary;
 }
 
 /* Custom animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.slide-in {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+.bounce {
+  animation: bounce 0.6s ease-in-out;
+}
+
+/* Dialog animations */
+.dialog-animation {
+  @apply transition-all duration-300 transform;
+}
+
+.dialog-animation[data-state="open"] {
+  @apply animate-in fade-in-0 zoom-in-95;
+}
+
+.dialog-animation[data-state="closed"] {
+  @apply animate-out fade-out-0 zoom-out-95;
+}
+
+/* Section expansion animation */
+.section-content {
+  @apply transition-all duration-300 overflow-hidden;
+  max-height: 0;
+}
+
+.section-content.expanded {
+  max-height: 2000px; /* Arbitrary large value */
 }

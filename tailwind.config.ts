@@ -21,6 +21,7 @@ export default {
 		extend: {
 			fontFamily: {
 				'noto': ['"Noto Naskh Arabic"', 'serif'],
+				'poppins': ['Poppins', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
