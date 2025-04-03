@@ -34,6 +34,16 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   
   // Reference to the latest added option input
   const lastOptionRef = useRef<HTMLInputElement>(null);
+  const initialInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus on the question textarea when the dialog opens
+  useEffect(() => {
+    if (open && initialInputRef.current) {
+      setTimeout(() => {
+        initialInputRef.current?.focus();
+      }, 100);
+    }
+  }, [open]);
 
   // Focus on the last added option
   useEffect(() => {
@@ -118,11 +128,11 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent 
-          className={`sm:max-w-2xl lg:max-w-3xl ${dirClass} ${fontClass} p-6 shadow-elevation animate-in fade-in-0 zoom-in-95 data-[state=open]:slide-in-from-bottom-1`}
+          className={`sm:max-w-md lg:max-w-2xl ${dirClass} ${fontClass} p-6 shadow-elevation animate-in fade-in-0 zoom-in-95 data-[state=open]:slide-in-from-bottom-1 rounded-xl`}
           aria-labelledby="question-dialog-title"
         >
           <DialogHeader>
-            <DialogTitle id="question-dialog-title" className="text-xl font-bold">
+            <DialogTitle id="question-dialog-title" className="text-xl font-bold gradient-text">
               {language === "english" ? "Add New Question" : "إضافة سؤال جديد"}
             </DialogTitle>
           </DialogHeader>
@@ -135,11 +145,12 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                   <span className="text-destructive ml-1">*</span>
                 </Label>
                 <Textarea 
-                  id="question" 
+                  id="question"
+                  ref={initialInputRef}
                   placeholder={language === "english" ? "Enter your question here" : "أدخل سؤالك هنا"} 
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  className={`min-h-24 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:shadow-sm text-base ${dirClass} ${fontClass}`}
+                  className={`min-h-24 input-underline rounded-lg border-b-2 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-sm text-base ${dirClass} ${fontClass}`}
                   aria-required="true"
                 />
               </div>
@@ -153,7 +164,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                   placeholder={language === "english" ? "Additional information about the question" : "معلومات إضافية عن السؤال"} 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className={`min-h-16 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:shadow-sm ${dirClass} ${fontClass}`}
+                  className={`min-h-16 input-underline rounded-lg border-b-2 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-sm ${dirClass} ${fontClass}`}
                 />
               </div>
               
@@ -174,7 +185,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                             size="sm"
                             className={`w-10 h-10 p-0 flex-shrink-0 transition-all duration-300 ${
                               option.isCorrect 
-                                ? "bg-green-600 hover:bg-green-700" 
+                                ? "bg-green-600 hover:bg-green-700 shadow-sm" 
                                 : "hover:border-red-400 hover:text-red-500"
                             }`}
                             onClick={() => handleSetCorrect(option.id)}
@@ -195,7 +206,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                         value={option.text}
                         onChange={(e) => handleOptionChange(option.id, e.target.value)}
                         placeholder={language === "english" ? `Option ${index + 1}` : `الخيار ${index + 1}`}
-                        className={`transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-sm text-base ${dirClass} ${fontClass}`}
+                        className={`input-underline rounded-lg border-b-2 shadow-sm transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 text-base ${dirClass} ${fontClass}`}
                         aria-required="true"
                       />
                       
@@ -226,7 +237,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="w-full transition-all duration-300 hover:border-primary hover:text-primary hover:shadow-sm flex items-center justify-center"
+                  className="w-full rounded-lg transition-all duration-300 hover:border-primary hover:text-primary hover:shadow-sm flex items-center justify-center"
                   onClick={handleAddOption}
                   disabled={options.length >= 6 || isSubmitting}
                   aria-label={language === "english" ? "Add option" : "إضافة خيار"}
@@ -246,7 +257,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                   min="1"
                   value={marks}
                   onChange={(e) => setMarks(e.target.value)}
-                  className={`w-28 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary ${dirClass} ${fontClass}`}
+                  className={`w-28 rounded-lg input-underline border-b-2 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 ${dirClass} ${fontClass}`}
                   aria-label={language === "english" ? "Question marks" : "درجات السؤال"}
                 />
               </div>
@@ -258,7 +269,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="min-w-24 min-h-10 text-base transition-all duration-300"
+              className="min-w-24 min-h-10 text-base transition-all duration-300 rounded-lg"
               disabled={isSubmitting}
             >
               {language === "english" ? "Cancel" : "إلغاء"}
@@ -266,7 +277,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
             <Button 
               type="button" 
               onClick={handleSubmit}
-              className="min-w-32 min-h-10 text-base shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+              className="min-w-32 min-h-10 text-base shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] rounded-lg bg-gradient-header"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
