@@ -25,42 +25,42 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(section.title);
-  
+
   const handleSaveTitle = () => {
     if (editedTitle.trim()) {
       onUpdate({ ...section, title: editedTitle });
       setIsEditing(false);
     }
   };
-  
+
   const handleCancelEdit = () => {
     setEditedTitle(section.title);
     setIsEditing(false);
   };
-  
+
   const handleDeleteQuestion = (questionId: string) => {
     const updatedQuestions = section.questions.filter(q => q.id !== questionId);
     onUpdate({ ...section, questions: updatedQuestions });
   };
-  
+
   const totalMarks = section.questions.reduce((sum, q) => sum + q.marks, 0);
   const questionCount = section.questions.length;
 
   return (
-    <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
+    <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="p-0 h-9 w-9 rounded-full transition-all duration-300 hover:bg-blue-100" 
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-0 h-9 w-9 rounded-full transition-all duration-300 hover:bg-blue-100"
             onClick={onToggleExpand}
           >
-            {section.isExpanded ? 
-              <ChevronDown className="h-5 w-5 transition-transform duration-300" /> : 
+            {section.isExpanded ?
+              <ChevronDown className="h-5 w-5 transition-transform duration-300" /> :
               <ChevronRight className="h-5 w-5 transition-transform duration-300" />}
           </Button>
-          
+
           {isEditing ? (
             <div className="flex items-center gap-2 scale-in">
               <Input
@@ -81,7 +81,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -99,12 +99,12 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
             <h3 className="font-semibold text-lg text-gradient-primary">{section.title}</h3>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground mr-2 bg-blue-50/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
             {questionCount} question{questionCount !== 1 ? 's' : ''} • {totalMarks} marks
           </div>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -122,7 +122,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -142,19 +142,19 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
           </TooltipProvider>
         </div>
       </div>
-      
+
       <div className={`overflow-hidden transition-all duration-500 ease-in-out ${section.isExpanded ? 'max-h-[2000px]' : 'max-h-0'}`}>
         {section.questions.length > 0 ? (
-          <ScrollArea className="max-h-[60vh] pr-4 ml-4 pt-2">
+          <ScrollArea className="max-h-[60vh] pr-4 ml-4 pt-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             <div className="space-y-4">
               {section.questions.map((question, index) => (
-                <div 
-                  key={question.id} 
-                  className="fade-in" 
+                <div
+                  key={question.id}
+                  className="fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <QuestionCard 
-                    question={question} 
+                  <QuestionCard
+                    question={question}
                     onDelete={() => handleDeleteQuestion(question.id)}
                   />
                 </div>
@@ -166,11 +166,11 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
             No questions added yet
           </div>
         )}
-        
+
         <Button
           onClick={onAddQuestion}
           variant="outline"
-          className="flex items-center gap-2 w-full mt-4 transition-all duration-300 bg-gradient-to-r from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 hover:border-blue-300 hover:scale-[1.01] shadow-sm active:scale-[0.99]"
+          className="flex items-center gap-2 w-full mt-4 transition-all duration-300 bg-gradient-to-r from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 hover:border-blue-300 shadow-sm active:scale-[0.99]"
         >
           <PlusCircle className="h-4 w-4" />
           Add Question

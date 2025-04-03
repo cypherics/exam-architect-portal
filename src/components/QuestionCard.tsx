@@ -15,19 +15,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }) => {
     <div className={`question-container ${question.language === "arabic" ? "rtl font-noto" : ""} fade-in`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Badge variant={question.language === "arabic" ? "outline" : "secondary"}>
-            {question.language === "arabic" ? "العربية" : "English"}
-          </Badge>
           <Badge variant="outline">{question.marks} marks</Badge>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Edit className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
             onClick={onDelete}
           >
@@ -35,7 +32,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }) => {
           </Button>
         </div>
       </div>
-      
+
       <div className="mb-2">
         <h4 className="font-medium text-base">
           {question.text}
@@ -46,20 +43,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }) => {
           </p>
         )}
       </div>
-      
+
       <div className="space-y-2 mt-4">
         {question.options.map((option, index) => (
-          <div 
-            key={option.id} 
-            className={`p-2 border rounded-md flex items-start gap-2 ${
-              option.isCorrect ? "border-green-500 bg-green-50" : "border-gray-200"
-            }`}
+          <div
+            key={option.id}
+            className={`p-2 border rounded-md flex items-start gap-2 ${option.isCorrect ? "border-green-500 bg-green-50" : "border-gray-200"
+              }`}
           >
-            <div className={`rounded-full h-5 w-5 flex items-center justify-center text-xs ${
-              option.isCorrect 
-                ? "bg-green-500 text-white" 
+            <div className={`rounded-full h-5 w-5 flex items-center justify-center text-xs ${option.isCorrect
+                ? "bg-green-500 text-white"
                 : "bg-muted text-muted-foreground"
-            }`}>
+              }`}>
               {String.fromCharCode(65 + index)}
             </div>
             <span className={option.isCorrect ? "text-green-700" : ""}>

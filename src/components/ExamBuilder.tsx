@@ -1,14 +1,14 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { 
-  PlusCircle, 
-  Save, 
-  ArrowLeft, 
-  Edit, 
-  Trash2, 
-  ChevronDown, 
+import {
+  PlusCircle,
+  Save,
+  ArrowLeft,
+  Edit,
+  Trash2,
+  ChevronDown,
   ChevronRight,
   Clock,
   CheckCircle2,
@@ -55,20 +55,21 @@ export interface Section {
 
 interface ExamBuilderProps {
   exam: Exam;
+  imported_sections: Section[];
   onBack: () => void;
   onExamUpdated?: (exam: Exam) => void;
 }
 
-const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }) => {
+const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBack, onExamUpdated }) => {
   const [sections, setSections] = useState<Section[]>([
     {
-      id: "section1",
+      id: `${Math.floor(1000 + Math.random() * 9000)}`,
       title: "Section 1",
       questions: [],
       isExpanded: true
     }
   ]);
-  
+
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -80,16 +81,23 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Use useEffect to assign imported_sections to sections if imported_sections is available
+  useEffect(() => {
+    if (imported_sections && imported_sections.length > 0) {
+      setSections(imported_sections);
+    }
+  }, [imported_sections]);
+
   const addSection = () => {
     const newSection = {
-      id: `section${sections.length + 1}-${Date.now()}`,
+      id: `${Math.floor(1000 + Math.random() * 9000)}`,
       title: `Section ${sections.length + 1}`,
       questions: [],
       isExpanded: true
     };
-    
+
     setSections([...sections, newSection]);
-    
+
     // Use setTimeout to give the DOM time to update before adding the animation class
     setTimeout(() => {
       const sectionElements = document.querySelectorAll('.section-container');
@@ -103,15 +111,15 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
   };
 
   const updateSection = (updatedSection: Section) => {
-    setSections(sections.map(section => 
+    setSections(sections.map(section =>
       section.id === updatedSection.id ? updatedSection : section
     ));
   };
 
   const toggleSectionExpand = (sectionId: string) => {
-    setSections(sections.map(section => 
-      section.id === sectionId 
-        ? { ...section, isExpanded: !section.isExpanded } 
+    setSections(sections.map(section =>
+      section.id === sectionId
+        ? { ...section, isExpanded: !section.isExpanded }
         : section
     ));
   };
@@ -120,7 +128,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
     setSelectedSection(sectionId);
     setShowLanguageDialog(true);
   };
-  
+
   const handleLanguageSelected = (language: "english" | "arabic") => {
     setSelectedLanguage(language);
     setShowLanguageDialog(false);
@@ -129,17 +137,17 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
 
   const handleQuestionAdded = (question: Question) => {
     if (!selectedSection) return;
-    
-    setSections(sections.map(section => 
-      section.id === selectedSection 
-        ? { ...section, questions: [...section.questions, question] } 
+
+    setSections(sections.map(section =>
+      section.id === selectedSection
+        ? { ...section, questions: [...section.questions, question] }
         : section
     ));
-    
+
     setShowQuestionDialog(false);
     setSelectedSection(null);
     setSelectedLanguage(null);
-    
+
     toast({
       title: "Question Added",
       description: "Your question has been successfully added to the section.",
@@ -149,10 +157,10 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
   const saveExam = () => {
     // Create JSON representation of the exam using our converter utility
     const exportData = convertAppDataToExportFormat(currentExam, sections);
-    
+
     // Convert to JSON string
     const jsonStr = JSON.stringify(exportData, null, 2);
-    
+
     // Create blob and download
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -162,14 +170,14 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Show success message
     toast({
       title: "Exam Saved",
       description: "Your exam has been successfully exported as JSON.",
       variant: "default",
     });
-    
+
     // If there's an onExamUpdated callback, call it
     if (onExamUpdated) {
       onExamUpdated(currentExam);
@@ -189,29 +197,29 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
     reader.onload = (event) => {
       try {
         const jsonData = JSON.parse(event.target?.result as string);
-        
+
         // Validate the imported data
         if (!validateExamData(jsonData)) {
           setImportError("Invalid exam format. Please check your JSON file structure.");
           return;
         }
-        
+
         // Convert the data to our app's format
         const { exam: importedExam, sections: importedSections } = convertImportedExamToAppFormat(jsonData);
-        
+
         // Update the state
         setCurrentExam(importedExam);
         setSections(importedSections);
-        
+
         // Close the dialog and show success message
         setShowImportDialog(false);
-        
+
         toast({
           title: "Exam Imported",
           description: `Successfully imported ${importedExam.title} with ${importedSections.length} sections.`,
           variant: "default",
         });
-        
+
         // If there's an onExamUpdated callback, call it
         if (onExamUpdated) {
           onExamUpdated(importedExam);
@@ -232,9 +240,9 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
         <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={onBack}
                 className="rounded-full h-9 w-9 transition-transform hover:scale-110"
               >
@@ -255,20 +263,20 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
               </div>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={handleImportClick} 
+              <Button
+                onClick={handleImportClick}
                 variant="outline"
                 className="flex items-center gap-2 btn-hover shadow-sm"
               >
                 <Upload className="h-4 w-4" />
                 Import
               </Button>
-              <Button 
-                onClick={saveExam} 
+              <Button
+                onClick={saveExam}
                 className="flex items-center gap-2 btn-hover shadow-sm"
               >
                 <Download className="h-4 w-4" />
-                Export JSON
+                Create
               </Button>
             </div>
           </div>
@@ -280,18 +288,18 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
           <h2 className="text-xl font-semibold mb-2 text-gray-800">Exam Description</h2>
           <p className="text-muted-foreground">{currentExam.description}</p>
         </div>
-        
+
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
           <div>
             <h2 className="text-xl font-semibold">Exam Sections</h2>
             <p className="text-sm text-muted-foreground">
-              {sections.length} section{sections.length !== 1 ? 's' : ''} • 
+              {sections.length} section{sections.length !== 1 ? 's' : ''} •
               {totalQuestions} question{totalQuestions !== 1 ? 's' : ''}
             </p>
           </div>
-          <Button 
-            onClick={addSection} 
-            variant="outline" 
+          <Button
+            onClick={addSection}
+            variant="outline"
             className="flex items-center gap-2 btn-hover"
           >
             <PlusCircle className="h-4 w-4" />
@@ -315,9 +323,9 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
         {sections.length === 0 && (
           <div className="text-center py-16 border-2 border-dashed border-muted rounded-xl">
             <p className="text-muted-foreground mb-4">No sections added yet.</p>
-            <Button 
-              onClick={addSection} 
-              variant="outline" 
+            <Button
+              onClick={addSection}
+              variant="outline"
               className="flex items-center gap-2 mx-auto btn-hover"
             >
               <PlusCircle className="h-4 w-4" />
@@ -326,7 +334,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
           </div>
         )}
       </main>
-      
+
       {/* Import Dialog */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent className="sm:max-w-md dialog-animation rounded-xl">
@@ -367,15 +375,15 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      <LanguageSelectionDialog 
-        open={showLanguageDialog} 
+
+      <LanguageSelectionDialog
+        open={showLanguageDialog}
         onOpenChange={setShowLanguageDialog}
         onLanguageSelect={handleLanguageSelected}
       />
-      
-      <QuestionDialog 
-        open={showQuestionDialog} 
+
+      <QuestionDialog
+        open={showQuestionDialog}
         onOpenChange={setShowQuestionDialog}
         onAddQuestion={handleQuestionAdded}
         language={selectedLanguage || "english"}

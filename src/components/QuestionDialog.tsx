@@ -23,15 +23,17 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   onAddQuestion,
   language,
 }) => {
+
+
   const [text, setText] = useState("");
   const [description, setDescription] = useState("");
   const [marks, setMarks] = useState("1");
-  const [options, setOptions] = useState<{id: string; text: string; isCorrect: boolean}[]>([
-    { id: "opt1", text: "", isCorrect: false },
-    { id: "opt2", text: "", isCorrect: false }
+  const [options, setOptions] = useState<{ id: string; text: string; isCorrect: boolean }[]>([
+    { id: `${Math.floor(1000 + Math.random() * 9000)}`, text: "", isCorrect: false },
+    { id: `${Math.floor(1000 + Math.random() * 9000)}`, text: "", isCorrect: false }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Reference to the latest added option input
   const lastOptionRef = useRef<HTMLInputElement>(null);
   const initialInputRef = useRef<HTMLTextAreaElement>(null);
@@ -54,11 +56,11 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
 
   const handleAddOption = () => {
     setOptions([
-      ...options, 
-      { 
-        id: `opt${options.length + 1}-${Date.now()}`, 
-        text: "", 
-        isCorrect: false 
+      ...options,
+      {
+        id: `${Math.floor(1000 + Math.random() * 9000)}`,
+        text: "",
+        isCorrect: false
       }
     ]);
   };
@@ -68,13 +70,13 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   };
 
   const handleOptionChange = (id: string, text: string) => {
-    setOptions(options.map(option => 
+    setOptions(options.map(option =>
       option.id === id ? { ...option, text } : option
     ));
   };
 
   const handleSetCorrect = (id: string) => {
-    setOptions(options.map(option => 
+    setOptions(options.map(option =>
       ({ ...option, isCorrect: option.id === id })
     ));
   };
@@ -84,37 +86,39 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
     if (!text.trim()) {
       return;
     }
-    
+
     if (!options.some(opt => opt.isCorrect)) {
       return;
     }
-    
+
     if (options.some(opt => !opt.text.trim())) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     const question: Question = {
-      id: `question-${Date.now()}`,
+      id: `${Math.floor(1000 + Math.random() * 9000)}`,
       language,
       text,
       description,
       marks: parseInt(marks) || 1,
       options: [...options]
     };
-    
+
+
     // Simulate a short delay to show loading state
     setTimeout(() => {
+
       onAddQuestion(question);
-      
+
       // Reset form
       setText("");
       setDescription("");
       setMarks("1");
       setOptions([
-        { id: "opt1", text: "", isCorrect: false },
-        { id: "opt2", text: "", isCorrect: false }
+        { id: `${Math.floor(1000 + Math.random() * 9000)}`, text: "", isCorrect: false },
+        { id: `${Math.floor(1000 + Math.random() * 9000)}`, text: "", isCorrect: false }
       ]);
       setIsSubmitting(false);
     }, 400);
@@ -127,7 +131,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent 
+        <DialogContent
           className={`sm:max-w-md lg:max-w-2xl ${dirClass} ${fontClass} p-6 shadow-elevation animate-in fade-in-0 zoom-in-95 data-[state=open]:slide-in-from-bottom-1 rounded-xl`}
           aria-labelledby="question-dialog-title"
         >
@@ -136,44 +140,47 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               {language === "english" ? "Add New Question" : "إضافة سؤال جديد"}
             </DialogTitle>
           </DialogHeader>
-          
+
           <ScrollArea className="max-h-[70vh] pr-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            <div className="grid gap-5 py-4">
+            <div className="grid gap-5 py-4 px-2 sm:px-6 md:px-8 lg:px-10">
+              {/* Question Section */}
               <div className="grid gap-2">
                 <Label htmlFor="question" className="text-base">
                   {language === "english" ? "Question" : "السؤال"}
                   <span className="text-destructive ml-1">*</span>
                 </Label>
-                <Textarea 
+                <Textarea
                   id="question"
                   ref={initialInputRef}
-                  placeholder={language === "english" ? "Enter your question here" : "أدخل سؤالك هنا"} 
+                  placeholder={language === "english" ? "Enter your question here" : "أدخل سؤالك هنا"}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   className={`min-h-24 input-underline rounded-lg border-b-2 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-sm text-base ${dirClass} ${fontClass}`}
                   aria-required="true"
                 />
               </div>
-              
+
+              {/* Description Section */}
               <div className="grid gap-2">
                 <Label htmlFor="description" className="text-base">
                   {language === "english" ? "Description (Optional)" : "الوصف (اختياري)"}
                 </Label>
-                <Textarea 
-                  id="description" 
-                  placeholder={language === "english" ? "Additional information about the question" : "معلومات إضافية عن السؤال"} 
+                <Textarea
+                  id="description"
+                  placeholder={language === "english" ? "Additional information about the question" : "معلومات إضافية عن السؤال"}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className={`min-h-16 input-underline rounded-lg border-b-2 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:shadow-sm ${dirClass} ${fontClass}`}
                 />
               </div>
-              
+
+              {/* Answer Options Section */}
               <div>
                 <Label className="mb-3 block text-base">
                   {language === "english" ? "Answer Options" : "خيارات الإجابة"}
                   <span className="text-destructive ml-1">*</span>
                 </Label>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                   {options.map((option, index) => (
                     <div key={option.id} className="flex gap-2 items-center group">
@@ -183,11 +190,10 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                             type="button"
                             variant={option.isCorrect ? "default" : "outline"}
                             size="sm"
-                            className={`w-10 h-10 p-0 flex-shrink-0 transition-all duration-300 ${
-                              option.isCorrect 
-                                ? "bg-green-600 hover:bg-green-700 shadow-sm" 
-                                : "hover:border-red-400 hover:text-red-500"
-                            }`}
+                            className={`w-10 h-10 p-0 flex-shrink-0 transition-all duration-300 ${option.isCorrect
+                              ? "bg-green-600 hover:bg-green-700 shadow-sm"
+                              : "hover:border-red-400 hover:text-red-500"
+                              }`}
                             onClick={() => handleSetCorrect(option.id)}
                             aria-label={option.isCorrect ? "Correct answer" : "Mark as correct"}
                           >
@@ -195,13 +201,13 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                          {option.isCorrect 
+                          {option.isCorrect
                             ? (language === "english" ? "Correct answer" : "الإجابة الصحيحة")
                             : (language === "english" ? "Mark as correct" : "حدد كإجابة صحيحة")}
                         </TooltipContent>
                       </Tooltip>
-                      
-                      <Input 
+
+                      <Input
                         ref={index === options.length - 1 ? lastOptionRef : null}
                         value={option.text}
                         onChange={(e) => handleOptionChange(option.id, e.target.value)}
@@ -209,7 +215,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                         className={`input-underline rounded-lg border-b-2 shadow-sm transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 text-base ${dirClass} ${fontClass}`}
                         aria-required="true"
                       />
-                      
+
                       {options.length > 2 && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -232,7 +238,7 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                     </div>
                   ))}
                 </div>
-                
+
                 <Button
                   type="button"
                   variant="outline"
@@ -246,13 +252,14 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
                   {language === "english" ? "Add Option" : "إضافة خيار"}
                 </Button>
               </div>
-              
+
+              {/* Marks Section */}
               <div className="grid gap-2">
                 <Label htmlFor="marks" className="text-base">
                   {language === "english" ? "Marks" : "الدرجات"}
                 </Label>
-                <Input 
-                  id="marks" 
+                <Input
+                  id="marks"
                   type="number"
                   min="1"
                   value={marks}
@@ -263,19 +270,19 @@ const QuestionDialog: React.FC<QuestionDialogProps> = ({
               </div>
             </div>
           </ScrollArea>
-          
+
           <DialogFooter className={`mt-4 ${isRtl ? "flex-row-reverse" : ""}`}>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               className="min-w-24 min-h-10 text-base transition-all duration-300 rounded-lg"
               disabled={isSubmitting}
             >
               {language === "english" ? "Cancel" : "إلغاء"}
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               onClick={handleSubmit}
               className="min-w-32 min-h-10 text-base shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] rounded-lg bg-gradient-header"
               disabled={isSubmitting}
