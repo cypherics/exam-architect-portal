@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, FileEdit, GraduationCap } from "lucide-react";
+import { PlusCircle, FileEdit, GraduationCap, Upload, Download } from "lucide-react";
 import ExamBuilder from "@/components/ExamBuilder";
 import { useToast } from "@/components/ui/use-toast";
+import { convertImportedExamToAppFormat, validateExamData } from "@/utils/examConverter";
 
 interface Exam {
   id: string;
@@ -19,6 +20,7 @@ interface Exam {
 const Index = () => {
   const [showNewExamDialog, setShowNewExamDialog] = useState(false);
   const [showSelectExamDialog, setShowSelectExamDialog] = useState(false);
+  const [showImportExamDialog, setShowImportExamDialog] = useState(false);
   const [examDetails, setExamDetails] = useState<Exam | null>(null);
   const { toast } = useToast();
   const [savedExams, setSavedExams] = useState<Exam[]>([
@@ -31,6 +33,7 @@ const Index = () => {
     duration: "",
     passingScore: ""
   });
+  const [importError, setImportError] = useState<string | null>(null);
 
   const handleCreateExam = () => {
     if (!newExam.title || !newExam.description || !newExam.duration || !newExam.passingScore) {
@@ -70,8 +73,64 @@ const Index = () => {
     });
   };
 
+  const handleExamUpdate = (updatedExam: Exam) => {
+    // Update the exam in the savedExams list
+    setSavedExams(savedExams.map(exam => 
+      exam.id === updatedExam.id ? updatedExam : exam
+    ));
+    
+    // Also update the current exam details if necessary
+    if (examDetails?.id === updatedExam.id) {
+      setExamDetails(updatedExam);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const jsonData = JSON.parse(event.target?.result as string);
+        
+        // Validate the imported data
+        if (!validateExamData(jsonData)) {
+          setImportError("Invalid exam format. Please check your JSON file structure.");
+          return;
+        }
+        
+        // Convert the data to our app's format
+        const { exam: importedExam, sections: importedSections } = convertImportedExamToAppFormat(jsonData);
+        
+        // Add the imported exam to saved exams if it doesn't exist
+        if (!savedExams.some(exam => exam.title === importedExam.title)) {
+          setSavedExams([...savedExams, importedExam]);
+        }
+        
+        // Set as current exam and open builder
+        setExamDetails(importedExam);
+        setShowImportExamDialog(false);
+        
+        toast({
+          title: "Exam Imported",
+          description: `Successfully imported ${importedExam.title}`,
+          variant: "default",
+        });
+      } catch (error) {
+        console.error("Error importing exam:", error);
+        setImportError("Failed to parse the JSON file. Please check the file format.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   if (examDetails) {
-    return <ExamBuilder exam={examDetails} onBack={() => setExamDetails(null)} />;
+    return <ExamBuilder 
+      exam={examDetails} 
+      onBack={() => setExamDetails(null)} 
+      onExamUpdated={handleExamUpdate}
+    />;
   }
 
   return (
@@ -98,7 +157,7 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto py-12 md:py-16 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
           <div className="bg-white rounded-2xl border shadow-card p-8 text-center flex flex-col items-center justify-center transition-all hover:shadow-elevation card-hover scale-in">
             <div className="bg-blue-50 p-5 rounded-full mb-6 shadow-soft">
               <PlusCircle className="h-14 w-14 text-primary" />
@@ -139,6 +198,27 @@ const Index = () => {
             {savedExams.length === 0 && (
               <p className="text-sm text-muted-foreground mt-3">No saved exams</p>
             )}
+          </div>
+          
+          <div 
+            className="bg-white rounded-2xl border shadow-card p-8 text-center flex flex-col items-center justify-center transition-all hover:shadow-elevation card-hover scale-in" 
+            style={{ animationDelay: "0.4s" }}
+          >
+            <div className="bg-green-50 p-5 rounded-full mb-6 shadow-soft">
+              <Upload className="h-14 w-14 text-primary" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-4">Import Exam</h2>
+            <p className="text-muted-foreground mb-8 px-4 leading-relaxed">
+              Import an existing exam from JSON file to continue working on it
+            </p>
+            <Button 
+              onClick={() => setShowImportExamDialog(true)} 
+              variant="outline" 
+              size="lg"
+              className="btn-hover text-base px-8 py-6 h-auto font-medium rounded-xl border-primary/30 hover:border-primary"
+            >
+              Import JSON
+            </Button>
           </div>
         </div>
       </main>
@@ -245,6 +325,48 @@ const Index = () => {
               </div>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Import Exam Dialog */}
+      <Dialog open={showImportExamDialog} onOpenChange={setShowImportExamDialog}>
+        <DialogContent className="sm:max-w-md dialog-animation rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Import Exam from JSON</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-5 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="examFile" className="text-sm font-medium">
+                Upload Exam JSON File
+              </Label>
+              <Input
+                id="examFile"
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="input-underline rounded-lg"
+              />
+              {importError && (
+                <p className="text-sm text-red-500 mt-1">{importError}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload a JSON file with the proper exam structure
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setShowImportExamDialog(false);
+                setImportError(null);
+              }}
+              className="rounded-lg"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       

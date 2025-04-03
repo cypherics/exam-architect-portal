@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   PlusCircle, 
   Save, 
@@ -11,14 +11,19 @@ import {
   ChevronDown, 
   ChevronRight,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  Download
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import SectionComponent from "./SectionComponent";
 import LanguageSelectionDialog from "./LanguageSelectionDialog";
 import QuestionDialog from "./QuestionDialog";
+import { convertAppDataToExportFormat, convertImportedExamToAppFormat, validateExamData, ExportableExam } from "@/utils/examConverter";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-interface Exam {
+export interface Exam {
   id: string;
   title: string;
   description: string;
@@ -51,9 +56,10 @@ export interface Section {
 interface ExamBuilderProps {
   exam: Exam;
   onBack: () => void;
+  onExamUpdated?: (exam: Exam) => void;
 }
 
-const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
+const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack, onExamUpdated }) => {
   const [sections, setSections] = useState<Section[]>([
     {
       id: "section1",
@@ -65,9 +71,14 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
   
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<"english" | "arabic" | null>(null);
+  const [currentExam, setCurrentExam] = useState<Exam>(exam);
+  const [importError, setImportError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addSection = () => {
     const newSection = {
@@ -136,75 +147,81 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
   };
 
   const saveExam = () => {
-    // Create JSON representation of the exam
-    const examData = {
-      ...exam,
-      sections: sections.map(section => ({
-        id: section.id,
-        title: section.title,
-        questions: section.questions.map(q => ({
-          id: q.id,
-          language: q.language,
-          text: q.text,
-          description: q.description,
-          marks: q.marks,
-          options: q.options
-        }))
-      }))
-    };
+    // Create JSON representation of the exam using our converter utility
+    const exportData = convertAppDataToExportFormat(currentExam, sections);
     
-    // For demo purposes, we're showing the JSON
-    const jsonStr = JSON.stringify(examData, null, 2);
+    // Convert to JSON string
+    const jsonStr = JSON.stringify(exportData, null, 2);
     
-    // Show success message with data
+    // Create blob and download
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${currentExam.title.replace(/\s+/g, '_').toLowerCase()}_exam.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show success message
     toast({
       title: "Exam Saved",
-      description: "Your exam has been successfully saved.",
+      description: "Your exam has been successfully exported as JSON.",
       variant: "default",
     });
     
-    // Open a new dialog to display the JSON
-    const jsonWindow = window.open("", "_blank");
-    if (jsonWindow) {
-      jsonWindow.document.write(`
-        <html>
-          <head>
-            <title>Exam JSON Data</title>
-            <style>
-              body { 
-                font-family: 'Poppins', sans-serif;
-                padding: 20px;
-                background-color: #f5f5f5;
-                line-height: 1.6;
-              }
-              h2 {
-                color: #3b82f6;
-                margin-bottom: 20px;
-              }
-              pre {
-                background-color: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                overflow: auto;
-                font-size: 14px;
-              }
-              .container {
-                max-width: 800px;
-                margin: 0 auto;
-              }
-            </style>
-            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-          </head>
-          <body>
-            <div class="container">
-              <h2>Exam JSON Data</h2>
-              <pre>${jsonStr}</pre>
-            </div>
-          </body>
-        </html>
-      `);
+    // If there's an onExamUpdated callback, call it
+    if (onExamUpdated) {
+      onExamUpdated(currentExam);
     }
+  };
+
+  const handleImportClick = () => {
+    setImportError(null);
+    setShowImportDialog(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const jsonData = JSON.parse(event.target?.result as string);
+        
+        // Validate the imported data
+        if (!validateExamData(jsonData)) {
+          setImportError("Invalid exam format. Please check your JSON file structure.");
+          return;
+        }
+        
+        // Convert the data to our app's format
+        const { exam: importedExam, sections: importedSections } = convertImportedExamToAppFormat(jsonData);
+        
+        // Update the state
+        setCurrentExam(importedExam);
+        setSections(importedSections);
+        
+        // Close the dialog and show success message
+        setShowImportDialog(false);
+        
+        toast({
+          title: "Exam Imported",
+          description: `Successfully imported ${importedExam.title} with ${importedSections.length} sections.`,
+          variant: "default",
+        });
+        
+        // If there's an onExamUpdated callback, call it
+        if (onExamUpdated) {
+          onExamUpdated(importedExam);
+        }
+      } catch (error) {
+        console.error("Error importing exam:", error);
+        setImportError("Failed to parse the JSON file. Please check the file format.");
+      }
+    };
+    reader.readAsText(file);
   };
 
   const totalQuestions = sections.reduce((sum, section) => sum + section.questions.length, 0);
@@ -224,26 +241,36 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{exam.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{currentExam.title}</h1>
                 <div className="flex items-center text-sm text-muted-foreground gap-3 mt-1">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{exam.duration} minutes</span>
+                    <span>{currentExam.duration} minutes</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Passing score: {exam.passingScore}%</span>
+                    <span>Passing score: {currentExam.passingScore}%</span>
                   </div>
                 </div>
               </div>
             </div>
-            <Button 
-              onClick={saveExam} 
-              className="flex items-center gap-2 btn-hover shadow-sm"
-            >
-              <Save className="h-4 w-4" />
-              Save Exam
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleImportClick} 
+                variant="outline"
+                className="flex items-center gap-2 btn-hover shadow-sm"
+              >
+                <Upload className="h-4 w-4" />
+                Import
+              </Button>
+              <Button 
+                onClick={saveExam} 
+                className="flex items-center gap-2 btn-hover shadow-sm"
+              >
+                <Download className="h-4 w-4" />
+                Export JSON
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -251,7 +278,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
       <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="bg-white/50 backdrop-blur-sm border border-blue-100 rounded-xl p-6 mb-8 fade-in shadow-sm">
           <h2 className="text-xl font-semibold mb-2 text-gray-800">Exam Description</h2>
-          <p className="text-muted-foreground">{exam.description}</p>
+          <p className="text-muted-foreground">{currentExam.description}</p>
         </div>
         
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -299,6 +326,47 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, onBack }) => {
           </div>
         )}
       </main>
+      
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-md dialog-animation rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Import Exam</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="examFile" className="text-sm font-medium">
+                  Upload Exam JSON File
+                </Label>
+                <Input
+                  id="examFile"
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".json"
+                  onChange={handleFileChange}
+                  className="input-underline rounded-lg"
+                />
+                {importError && (
+                  <p className="text-sm text-red-500 mt-1">{importError}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload a JSON file with the exam structure
+                </p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowImportDialog(false)}
+              className="rounded-lg"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <LanguageSelectionDialog 
         open={showLanguageDialog} 
