@@ -12,7 +12,7 @@ interface QuestionCardProps {
 
 const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }) => {
   return (
-    <div className={`question-container ${question.language === "arabic" ? "rtl font-noto" : ""} fade-in`}>
+    <div className={`question-container ${question.language === "arabic" ? "font-noto" : ""} fade-in`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Badge variant="outline">{question.marks} marks</Badge>
@@ -52,8 +52,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }) => {
               }`}
           >
             <div className={`rounded-full h-5 w-5 flex items-center justify-center text-xs ${option.isCorrect
-                ? "bg-green-500 text-white"
-                : "bg-muted text-muted-foreground"
+              ? "bg-green-500 text-white"
+              : "bg-muted text-muted-foreground"
               }`}>
               {String.fromCharCode(65 + index)}
             </div>
