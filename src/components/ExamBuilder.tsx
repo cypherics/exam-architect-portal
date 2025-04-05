@@ -60,6 +60,9 @@ interface ExamBuilderProps {
   onExamUpdated?: (exam: Exam) => void;
 }
 
+// Storage key for localStorage
+const EXAM_BUILDER_STORAGE_KEY = "exam_builder_state";
+
 const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBack, onExamUpdated }) => {
   const [sections, setSections] = useState<Section[]>([
     {
@@ -78,13 +81,80 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
   const [currentExam, setCurrentExam] = useState<Exam>(exam);
   const [importError, setImportError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [pendingChanges, setPendingChanges] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Restore saved state from localStorage when component mounts
+  useEffect(() => {
+    const savedState = localStorage.getItem(EXAM_BUILDER_STORAGE_KEY);
+    
+    if (savedState) {
+      try {
+        const { exam: savedExam, sections: savedSections } = JSON.parse(savedState);
+        
+        // Only restore if we're working on the same exam (by ID)
+        if (savedExam.id === exam.id) {
+          setCurrentExam(savedExam);
+          setSections(savedSections);
+          toast({
+            title: "Progress Restored",
+            description: "Your previous work has been restored.",
+          });
+        }
+      } catch (error) {
+        console.error("Error restoring saved state:", error);
+      }
+    }
+  }, [exam.id]);
+
+  // Save state to localStorage whenever sections or exam are updated
+  useEffect(() => {
+    if (pendingChanges) {
+      const stateToSave = {
+        exam: currentExam,
+        sections: sections
+      };
+      localStorage.setItem(EXAM_BUILDER_STORAGE_KEY, JSON.stringify(stateToSave));
+      setPendingChanges(false);
+    }
+  }, [pendingChanges, currentExam, sections]);
+
+  // Set up auto-save on a timer
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      if (pendingChanges) {
+        const stateToSave = {
+          exam: currentExam,
+          sections: sections
+        };
+        localStorage.setItem(EXAM_BUILDER_STORAGE_KEY, JSON.stringify(stateToSave));
+        setPendingChanges(false);
+      }
+    }, 5000); // Auto-save every 5 seconds if there are pending changes
+    
+    return () => clearInterval(autoSaveInterval);
+  }, [pendingChanges, currentExam, sections]);
+
+  // Setup beforeunload event to warn users about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingChanges) {
+        const message = "You have unsaved changes. Are you sure you want to leave?";
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [pendingChanges]);
 
   // Use useEffect to assign imported_sections to sections if imported_sections is available
   useEffect(() => {
     if (imported_sections && imported_sections.length > 0) {
       setSections(imported_sections);
+      setPendingChanges(true);
     }
   }, [imported_sections]);
 
@@ -97,6 +167,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     };
 
     setSections([...sections, newSection]);
+    setPendingChanges(true);
 
     // Use setTimeout to give the DOM time to update before adding the animation class
     setTimeout(() => {
@@ -108,12 +179,14 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
 
   const deleteSection = (sectionId: string) => {
     setSections(sections.filter(section => section.id !== sectionId));
+    setPendingChanges(true);
   };
 
   const updateSection = (updatedSection: Section) => {
     setSections(sections.map(section =>
       section.id === updatedSection.id ? updatedSection : section
     ));
+    setPendingChanges(true);
   };
 
   const toggleSectionExpand = (sectionId: string) => {
@@ -143,6 +216,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
         ? { ...section, questions: [...section.questions, question] }
         : section
     ));
+    setPendingChanges(true);
 
     setShowQuestionDialog(false);
     setSelectedSection(null);
@@ -170,6 +244,9 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Clear the pending changes flag
+    setPendingChanges(false);
 
     // Show success message
     toast({
@@ -210,6 +287,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
         // Update the state
         setCurrentExam(importedExam);
         setSections(importedSections);
+        setPendingChanges(true);
 
         // Close the dialog and show success message
         setShowImportDialog(false);
@@ -243,7 +321,15 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onBack}
+                onClick={() => {
+                  if (pendingChanges) {
+                    if (window.confirm("You have unsaved changes. Are you sure you want to go back?")) {
+                      onBack();
+                    }
+                  } else {
+                    onBack();
+                  }
+                }}
                 className="rounded-full h-9 w-9 transition-transform hover:scale-110"
               >
                 <ArrowLeft className="h-5 w-5" />

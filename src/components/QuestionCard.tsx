@@ -11,10 +11,12 @@ interface QuestionCardProps {
   question: Question;
   onDelete: () => void;
   onEdit?: () => void;
+  autoSaved?: boolean;
 }
 
-const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit }) => {
+const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit, autoSaved = false }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
@@ -24,12 +26,24 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit 
     }
   };
 
+  // Show saved indicator when autoSaved prop changes to true
+  React.useEffect(() => {
+    if (autoSaved) {
+      setShowSavedIndicator(true);
+      const timer = setTimeout(() => {
+        setShowSavedIndicator(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSaved]);
+
   return (
     <div 
       className={cn(
         "question-container transition-all duration-300",
         question.language === "arabic" ? "font-noto rtl" : "",
-        "hover:shadow-elevation border border-blue-100 hover:border-blue-200 bg-gradient-to-b from-white to-blue-50/30"
+        "hover:shadow-elevation border border-blue-100 hover:border-blue-200 bg-gradient-to-b from-white to-blue-50/30",
+        showSavedIndicator ? "saved-indicator" : ""
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -45,6 +59,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit 
           >
             {question.marks} mark{question.marks !== 1 ? 's' : ''}
           </Badge>
+          
+          {showSavedIndicator && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 transition-all duration-300 animate-pulse">
+              Saved
+            </Badge>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
