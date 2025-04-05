@@ -68,6 +68,7 @@ export default {
         },
         coral: '#FF6F61',
         teal: {
+          DEFAULT: '#14b8a6',
           50: '#f0fdfa',
           100: '#ccfbf1',
           200: '#99f6e4',
