@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -11,11 +10,11 @@ import { convertImportedExamToAppFormat, validateExamData } from "@/utils/examCo
 import { Section } from "@/components/ExamBuilder";
 import { Exam } from "@/components/ExamBuilder";
 
-// Storage keys for localStorage
-const SAVED_EXAMS_STORAGE_KEY = "saved_exams";
-const NEW_EXAM_FORM_STORAGE_KEY = "new_exam_form";
-const CURRENT_EXAM_STORAGE_KEY = "current_exam";
-const CURRENT_SECTIONS_STORAGE_KEY = "current_sections";
+// Storage keys for localStorage - explicitly named to avoid conflicts
+const SAVED_EXAMS_KEY = "saved_exams_list";
+const NEW_EXAM_FORM_KEY = "new_exam_form_state";
+const CURRENT_EXAM_KEY = "current_exam";
+const CURRENT_SECTIONS_KEY = "current_sections";
 
 const Index = () => {
   const [showNewExamDialog, setShowNewExamDialog] = useState(false);
@@ -39,87 +38,68 @@ const Index = () => {
     passingScore: ""
   });
   const [importError, setImportError] = useState<string | null>(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Load saved exams from localStorage on component mount
+  // Load data from localStorage on component mount
   useEffect(() => {
-    const storedExams = localStorage.getItem(SAVED_EXAMS_STORAGE_KEY);
-    if (storedExams) {
-      try {
+    console.log("Index component mounted, checking localStorage");
+    
+    // Load saved exams
+    try {
+      const storedExams = localStorage.getItem(SAVED_EXAMS_KEY);
+      if (storedExams) {
         setSavedExams(JSON.parse(storedExams));
-      } catch (error) {
-        console.error("Error loading saved exams:", error);
       }
+    } catch (e) {
+      console.error("Error loading saved exams:", e);
     }
-
-    // Restore new exam form state
-    const storedNewExam = localStorage.getItem(NEW_EXAM_FORM_STORAGE_KEY);
-    if (storedNewExam) {
-      try {
+    
+    // Load new exam form data
+    try {
+      const storedNewExam = localStorage.getItem(NEW_EXAM_FORM_KEY);
+      if (storedNewExam) {
         setNewExam(JSON.parse(storedNewExam));
-      } catch (error) {
-        console.error("Error loading new exam form:", error);
       }
-    }
-
-    // Restore current exam if it exists
-    const storedCurrentExam = localStorage.getItem(CURRENT_EXAM_STORAGE_KEY);
-    const storedCurrentSections = localStorage.getItem(CURRENT_SECTIONS_STORAGE_KEY);
-    
-    if (storedCurrentExam) {
-      try {
-        const currentExam = JSON.parse(storedCurrentExam);
-        setExamDetails(currentExam);
-        
-        // Also load sections if available
-        if (storedCurrentSections) {
-          try {
-            const currentSections = JSON.parse(storedCurrentSections);
-            setSections(currentSections);
-          } catch (error) {
-            console.error("Error loading current sections:", error);
-          }
-        }
-        
-        // Don't show toast on initial load
-        if (!isInitialLoad) {
-          toast({
-            title: "Session Restored",
-            description: "Your previous exam session has been restored.",
-          });
-        }
-      } catch (error) {
-        console.error("Error loading current exam:", error);
-      }
+    } catch (e) {
+      console.error("Error loading new exam form:", e);
     }
     
-    setIsInitialLoad(false);
-  }, [isInitialLoad]);
+    // Check for current exam and sections in localStorage
+    try {
+      const storedExam = localStorage.getItem(CURRENT_EXAM_KEY);
+      const storedSections = localStorage.getItem(CURRENT_SECTIONS_KEY);
+      
+      if (storedExam && storedSections) {
+        console.log("Found stored exam and sections", {
+          exam: JSON.parse(storedExam),
+          sections: JSON.parse(storedSections)
+        });
+        
+        setExamDetails(JSON.parse(storedExam));
+        setSections(JSON.parse(storedSections));
+        
+        toast({
+          title: "Session Restored",
+          description: "Your previous exam session has been restored.",
+        });
+      }
+    } catch (e) {
+      console.error("Error restoring exam state:", e);
+    }
+  }, []);
 
   // Save exams to localStorage whenever they change
   useEffect(() => {
     if (savedExams.length > 0) {
-      localStorage.setItem(SAVED_EXAMS_STORAGE_KEY, JSON.stringify(savedExams));
+      localStorage.setItem(SAVED_EXAMS_KEY, JSON.stringify(savedExams));
     }
   }, [savedExams]);
 
   // Save new exam form state to localStorage
   useEffect(() => {
     if (newExam.title || newExam.description || newExam.duration || newExam.passingScore) {
-      localStorage.setItem(NEW_EXAM_FORM_STORAGE_KEY, JSON.stringify(newExam));
+      localStorage.setItem(NEW_EXAM_FORM_KEY, JSON.stringify(newExam));
     }
   }, [newExam]);
-
-  // Save current exam and sections to localStorage
-  useEffect(() => {
-    if (examDetails) {
-      localStorage.setItem(CURRENT_EXAM_STORAGE_KEY, JSON.stringify(examDetails));
-      localStorage.setItem(CURRENT_SECTIONS_STORAGE_KEY, JSON.stringify(sections));
-    } else {
-      localStorage.removeItem(CURRENT_EXAM_STORAGE_KEY);
-      localStorage.removeItem(CURRENT_SECTIONS_STORAGE_KEY);
-    }
-  }, [examDetails, sections]);
 
   const handleCreateExam = () => {
     if (!newExam.title || !newExam.description || !newExam.duration || !newExam.passingScore) {
@@ -139,7 +119,10 @@ const Index = () => {
       passingScore: newExam.passingScore
     };
 
+    // Save to list of saved exams
     setSavedExams([...savedExams, exam]);
+    
+    // Set as current exam
     setExamDetails(exam);
     setSections([{
       id: `${Math.floor(1000 + Math.random() * 9000)}`,
@@ -147,6 +130,11 @@ const Index = () => {
       questions: [],
       isExpanded: true
     }]);
+    
+    // Save to localStorage
+    localStorage.setItem(CURRENT_EXAM_KEY, JSON.stringify(exam));
+    localStorage.setItem(CURRENT_SECTIONS_KEY, JSON.stringify(sections));
+    
     setShowNewExamDialog(false);
 
     // Clear the new exam form state
@@ -156,7 +144,7 @@ const Index = () => {
       duration: "",
       passingScore: ""
     });
-    localStorage.removeItem(NEW_EXAM_FORM_STORAGE_KEY);
+    localStorage.removeItem(NEW_EXAM_FORM_KEY);
 
     toast({
       title: "Exam Created",
@@ -173,10 +161,10 @@ const Index = () => {
     // Also update the current exam details if necessary
     if (examDetails?.id === updatedExam.id) {
       setExamDetails(updatedExam);
+      
+      // Save to localStorage
+      localStorage.setItem(CURRENT_EXAM_KEY, JSON.stringify(updatedExam));
     }
-    
-    // Make sure to save to localStorage
-    localStorage.setItem(CURRENT_EXAM_STORAGE_KEY, JSON.stringify(updatedExam));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,8 +195,8 @@ const Index = () => {
         setSections(importedSections);
         
         // Save to localStorage
-        localStorage.setItem(CURRENT_EXAM_STORAGE_KEY, JSON.stringify(importedExam));
-        localStorage.setItem(CURRENT_SECTIONS_STORAGE_KEY, JSON.stringify(importedSections));
+        localStorage.setItem(CURRENT_EXAM_KEY, JSON.stringify(importedExam));
+        localStorage.setItem(CURRENT_SECTIONS_KEY, JSON.stringify(importedSections));
 
         setShowImportExamDialog(false);
 
@@ -229,8 +217,8 @@ const Index = () => {
   const handleBackFromExamBuilder = () => {
     setExamDetails(null);
     // Clear the current exam state in localStorage
-    localStorage.removeItem(CURRENT_EXAM_STORAGE_KEY);
-    localStorage.removeItem(CURRENT_SECTIONS_STORAGE_KEY);
+    localStorage.removeItem(CURRENT_EXAM_KEY);
+    localStorage.removeItem(CURRENT_SECTIONS_KEY);
   };
 
   if (examDetails) {
@@ -380,7 +368,6 @@ const Index = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
 
       {/* Import Exam Dialog */}
       <Dialog open={showImportExamDialog} onOpenChange={setShowImportExamDialog}>
