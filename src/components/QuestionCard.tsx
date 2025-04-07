@@ -27,7 +27,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
   };
 
   // Show saved indicator when autoSaved prop changes to true
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoSaved) {
       setShowSavedIndicator(true);
       const timer = setTimeout(() => {

@@ -64,7 +64,7 @@ interface ExamBuilderProps {
 const EXAM_BUILDER_STORAGE_KEY = "exam_builder_state";
 
 const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBack, onExamUpdated }) => {
-  const [sections, setSections] = useState<Section[]>([
+  const [sections, setSections] = useState<Section[]>(imported_sections && imported_sections.length > 0 ? imported_sections : [
     {
       id: `${Math.floor(1000 + Math.random() * 9000)}`,
       title: "Section 1",
@@ -82,6 +82,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
   const [importError, setImportError] = useState<string | null>(null);
   const { toast } = useToast();
   const [pendingChanges, setPendingChanges] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -97,16 +98,23 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
         if (savedExam.id === exam.id) {
           setCurrentExam(savedExam);
           setSections(savedSections);
-          toast({
-            title: "Progress Restored",
-            description: "Your previous work has been restored.",
-          });
+          
+          // Don't show toast on initial mount
+          if (!isInitialLoad) {
+            toast({
+              title: "Progress Restored",
+              description: "Your previous work has been restored.",
+            });
+          }
         }
       } catch (error) {
         console.error("Error restoring saved state:", error);
       }
     }
-  }, [exam.id]);
+    
+    // Only run this effect once on mount
+    setIsInitialLoad(false);
+  }, [exam.id, isInitialLoad]);
 
   // Save state to localStorage whenever sections or exam are updated
   useEffect(() => {
@@ -136,10 +144,21 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     return () => clearInterval(autoSaveInterval);
   }, [pendingChanges, currentExam, sections]);
 
+  // Manual save when we want to ensure immediate saving
+  const saveCurrentState = () => {
+    const stateToSave = {
+      exam: currentExam,
+      sections: sections
+    };
+    localStorage.setItem(EXAM_BUILDER_STORAGE_KEY, JSON.stringify(stateToSave));
+    setPendingChanges(false);
+  };
+
   // Setup beforeunload event to warn users about unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pendingChanges) {
+        saveCurrentState(); // Force save before unloading
         const message = "You have unsaved changes. Are you sure you want to leave?";
         e.returnValue = message;
         return message;
@@ -152,11 +171,11 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
 
   // Use useEffect to assign imported_sections to sections if imported_sections is available
   useEffect(() => {
-    if (imported_sections && imported_sections.length > 0) {
+    if (imported_sections && imported_sections.length > 0 && isInitialLoad) {
       setSections(imported_sections);
       setPendingChanges(true);
     }
-  }, [imported_sections]);
+  }, [imported_sections, isInitialLoad]);
 
   const addSection = () => {
     const newSection = {
@@ -217,6 +236,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
         : section
     ));
     setPendingChanges(true);
+    saveCurrentState(); // Immediate save after adding a question
 
     setShowQuestionDialog(false);
     setSelectedSection(null);
@@ -245,8 +265,9 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     link.click();
     document.body.removeChild(link);
 
-    // Clear the pending changes flag
+    // Clear the pending changes flag and save current state
     setPendingChanges(false);
+    saveCurrentState();
 
     // Show success message
     toast({
@@ -288,6 +309,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
         setCurrentExam(importedExam);
         setSections(importedSections);
         setPendingChanges(true);
+        saveCurrentState(); // Immediate save after importing
 
         // Close the dialog and show success message
         setShowImportDialog(false);
