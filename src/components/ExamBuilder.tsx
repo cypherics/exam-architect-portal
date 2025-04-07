@@ -62,6 +62,7 @@ interface ExamBuilderProps {
 // Storage key for localStorage
 const CURRENT_EXAM_KEY = "current_exam";
 const CURRENT_SECTIONS_KEY = "current_sections";
+const INITIAL_VISIT_KEY = "initial_visit";
 
 const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBack, onExamUpdated }) => {
   const [sections, setSections] = useState<Section[]>(imported_sections && imported_sections.length > 0 ? imported_sections : [
@@ -91,6 +92,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     console.log("Saving to localStorage", { currentExam, sections });
     localStorage.setItem(CURRENT_EXAM_KEY, JSON.stringify(currentExam));
     localStorage.setItem(CURRENT_SECTIONS_KEY, JSON.stringify(sections));
+    localStorage.setItem(INITIAL_VISIT_KEY, "false");
     setPendingChanges(false);
     setAutoSaved(true);
     

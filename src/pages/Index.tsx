@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -15,6 +16,7 @@ const SAVED_EXAMS_KEY = "saved_exams_list";
 const NEW_EXAM_FORM_KEY = "new_exam_form_state";
 const CURRENT_EXAM_KEY = "current_exam";
 const CURRENT_SECTIONS_KEY = "current_sections";
+const INITIAL_VISIT_KEY = "initial_visit";
 
 const Index = () => {
   const [showNewExamDialog, setShowNewExamDialog] = useState(false);
@@ -38,12 +40,70 @@ const Index = () => {
     passingScore: ""
   });
   const [importError, setImportError] = useState<string | null>(null);
+  const [isInitialVisit, setIsInitialVisit] = useState(true);
+
+  // Setup beforeunload event to clear localStorage when window is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear the current exam state when window is closed
+      console.log("Window closing - clearing current exam state");
+      localStorage.removeItem(CURRENT_EXAM_KEY);
+      localStorage.removeItem(CURRENT_SECTIONS_KEY);
+      localStorage.setItem(INITIAL_VISIT_KEY, "true");
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Load data from localStorage on component mount
   useEffect(() => {
     console.log("Index component mounted, checking localStorage");
     
-    // Load saved exams
+    // Check if this is the initial visit after page reload/close
+    const initialVisit = localStorage.getItem(INITIAL_VISIT_KEY);
+    console.log("Initial visit check:", initialVisit);
+    
+    if (initialVisit === "true" || initialVisit === null) {
+      // This is the first visit or after window close/reload - show landing page
+      console.log("This is initial visit - showing landing page");
+      setIsInitialVisit(true);
+      localStorage.setItem(INITIAL_VISIT_KEY, "false");
+      
+      // Clear any existing exam state
+      localStorage.removeItem(CURRENT_EXAM_KEY);
+      localStorage.removeItem(CURRENT_SECTIONS_KEY);
+      
+      setExamDetails(null);
+    } else {
+      // This is a subsequent visit - try to restore state
+      setIsInitialVisit(false);
+      
+      // Check for current exam and sections in localStorage
+      try {
+        const storedExam = localStorage.getItem(CURRENT_EXAM_KEY);
+        const storedSections = localStorage.getItem(CURRENT_SECTIONS_KEY);
+        
+        if (storedExam && storedSections) {
+          console.log("Found stored exam and sections", {
+            exam: JSON.parse(storedExam),
+            sections: JSON.parse(storedSections)
+          });
+          
+          setExamDetails(JSON.parse(storedExam));
+          setSections(JSON.parse(storedSections));
+          
+          toast({
+            title: "Session Restored",
+            description: "Your previous exam session has been restored.",
+          });
+        }
+      } catch (e) {
+        console.error("Error restoring exam state:", e);
+      }
+    }
+    
+    // Load saved exams anyway (this persists across visits)
     try {
       const storedExams = localStorage.getItem(SAVED_EXAMS_KEY);
       if (storedExams) {
@@ -61,29 +121,6 @@ const Index = () => {
       }
     } catch (e) {
       console.error("Error loading new exam form:", e);
-    }
-    
-    // Check for current exam and sections in localStorage
-    try {
-      const storedExam = localStorage.getItem(CURRENT_EXAM_KEY);
-      const storedSections = localStorage.getItem(CURRENT_SECTIONS_KEY);
-      
-      if (storedExam && storedSections) {
-        console.log("Found stored exam and sections", {
-          exam: JSON.parse(storedExam),
-          sections: JSON.parse(storedSections)
-        });
-        
-        setExamDetails(JSON.parse(storedExam));
-        setSections(JSON.parse(storedSections));
-        
-        toast({
-          title: "Session Restored",
-          description: "Your previous exam session has been restored.",
-        });
-      }
-    } catch (e) {
-      console.error("Error restoring exam state:", e);
     }
   }, []);
 
@@ -216,9 +253,8 @@ const Index = () => {
   // Handle back navigation from ExamBuilder
   const handleBackFromExamBuilder = () => {
     setExamDetails(null);
-    // Clear the current exam state in localStorage
-    localStorage.removeItem(CURRENT_EXAM_KEY);
-    localStorage.removeItem(CURRENT_SECTIONS_KEY);
+    // Mark as not initial visit so the state can be restored if user refreshes
+    localStorage.setItem(INITIAL_VISIT_KEY, "false");
   };
 
   if (examDetails) {
