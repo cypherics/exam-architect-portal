@@ -17,6 +17,7 @@ const NEW_EXAM_FORM_KEY = "new_exam_form_state";
 const CURRENT_EXAM_KEY = "current_exam";
 const CURRENT_SECTIONS_KEY = "current_sections";
 const INITIAL_VISIT_KEY = "initial_visit";
+const WINDOW_CLOSED_KEY = "window_was_closed";
 
 const Index = () => {
   const [showNewExamDialog, setShowNewExamDialog] = useState(false);
@@ -42,14 +43,12 @@ const Index = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [isInitialVisit, setIsInitialVisit] = useState(true);
 
-  // Setup beforeunload event to clear localStorage when window is closed
+  // Setup beforeunload event to mark window as closed when window is closed
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Clear the current exam state when window is closed
-      console.log("Window closing - clearing current exam state");
-      localStorage.removeItem(CURRENT_EXAM_KEY);
-      localStorage.removeItem(CURRENT_SECTIONS_KEY);
-      localStorage.setItem(INITIAL_VISIT_KEY, "true");
+      // Mark that the window was closed, which will trigger landing page on next load
+      console.log("Window closing - marking window as closed");
+      localStorage.setItem(WINDOW_CLOSED_KEY, "true");
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -60,46 +59,69 @@ const Index = () => {
   useEffect(() => {
     console.log("Index component mounted, checking localStorage");
     
-    // Check if this is the initial visit after page reload/close
-    const initialVisit = localStorage.getItem(INITIAL_VISIT_KEY);
-    console.log("Initial visit check:", initialVisit);
+    // Check if window was previously closed
+    const windowWasClosed = localStorage.getItem(WINDOW_CLOSED_KEY) === "true";
+    console.log("Window was previously closed:", windowWasClosed);
     
-    if (initialVisit === "true" || initialVisit === null) {
-      // This is the first visit or after window close/reload - show landing page
-      console.log("This is initial visit - showing landing page");
+    if (windowWasClosed) {
+      // Window was closed and reopened - show landing page and clear state
+      console.log("Window was closed and reopened - showing landing page and clearing state");
       setIsInitialVisit(true);
-      localStorage.setItem(INITIAL_VISIT_KEY, "false");
       
-      // Clear any existing exam state
+      // Clear exam state
       localStorage.removeItem(CURRENT_EXAM_KEY);
       localStorage.removeItem(CURRENT_SECTIONS_KEY);
+      localStorage.removeItem(WINDOW_CLOSED_KEY);
+      localStorage.setItem(INITIAL_VISIT_KEY, "true");
       
       setExamDetails(null);
-    } else {
-      // This is a subsequent visit - try to restore state
-      setIsInitialVisit(false);
       
-      // Check for current exam and sections in localStorage
-      try {
-        const storedExam = localStorage.getItem(CURRENT_EXAM_KEY);
-        const storedSections = localStorage.getItem(CURRENT_SECTIONS_KEY);
+      toast({
+        title: "Session Cleared",
+        description: "Previous session has been cleared as window was closed.",
+      });
+    } else {
+      // Check if this is the initial visit
+      const initialVisit = localStorage.getItem(INITIAL_VISIT_KEY);
+      console.log("Initial visit check:", initialVisit);
+      
+      if (initialVisit === "true" || initialVisit === null) {
+        // This is the first visit - show landing page
+        console.log("This is initial visit - showing landing page");
+        setIsInitialVisit(true);
+        localStorage.setItem(INITIAL_VISIT_KEY, "false");
         
-        if (storedExam && storedSections) {
-          console.log("Found stored exam and sections", {
-            exam: JSON.parse(storedExam),
-            sections: JSON.parse(storedSections)
-          });
+        // Clear any existing exam state
+        localStorage.removeItem(CURRENT_EXAM_KEY);
+        localStorage.removeItem(CURRENT_SECTIONS_KEY);
+        
+        setExamDetails(null);
+      } else {
+        // This is a subsequent visit - try to restore state
+        setIsInitialVisit(false);
+        
+        // Check for current exam and sections in localStorage
+        try {
+          const storedExam = localStorage.getItem(CURRENT_EXAM_KEY);
+          const storedSections = localStorage.getItem(CURRENT_SECTIONS_KEY);
           
-          setExamDetails(JSON.parse(storedExam));
-          setSections(JSON.parse(storedSections));
-          
-          toast({
-            title: "Session Restored",
-            description: "Your previous exam session has been restored.",
-          });
+          if (storedExam && storedSections) {
+            console.log("Found stored exam and sections", {
+              exam: JSON.parse(storedExam),
+              sections: JSON.parse(storedSections)
+            });
+            
+            setExamDetails(JSON.parse(storedExam));
+            setSections(JSON.parse(storedSections));
+            
+            toast({
+              title: "Session Restored",
+              description: "Your previous exam session has been restored.",
+            });
+          }
+        } catch (e) {
+          console.error("Error restoring exam state:", e);
         }
-      } catch (e) {
-        console.error("Error restoring exam state:", e);
       }
     }
     
@@ -255,6 +277,8 @@ const Index = () => {
     setExamDetails(null);
     // Mark as not initial visit so the state can be restored if user refreshes
     localStorage.setItem(INITIAL_VISIT_KEY, "false");
+    // Clear the window closed flag
+    localStorage.removeItem(WINDOW_CLOSED_KEY);
   };
 
   if (examDetails) {

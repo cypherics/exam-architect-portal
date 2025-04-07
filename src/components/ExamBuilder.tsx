@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -63,6 +64,7 @@ interface ExamBuilderProps {
 const CURRENT_EXAM_KEY = "current_exam";
 const CURRENT_SECTIONS_KEY = "current_sections";
 const INITIAL_VISIT_KEY = "initial_visit";
+const WINDOW_CLOSED_KEY = "window_was_closed";
 
 const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBack, onExamUpdated }) => {
   const [sections, setSections] = useState<Section[]>(imported_sections && imported_sections.length > 0 ? imported_sections : [
@@ -93,6 +95,7 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     localStorage.setItem(CURRENT_EXAM_KEY, JSON.stringify(currentExam));
     localStorage.setItem(CURRENT_SECTIONS_KEY, JSON.stringify(sections));
     localStorage.setItem(INITIAL_VISIT_KEY, "false");
+    localStorage.removeItem(WINDOW_CLOSED_KEY); // Clear the window closed flag when we explicitly save
     setPendingChanges(false);
     setAutoSaved(true);
     
@@ -123,9 +126,13 @@ const ExamBuilder: React.FC<ExamBuilderProps> = ({ exam, imported_sections, onBa
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (pendingChanges) {
         saveToLocalStorage(); // Force save before unloading
+        localStorage.setItem(WINDOW_CLOSED_KEY, "true"); // Mark window as closed
         const message = "You have unsaved changes. Are you sure you want to leave?";
         e.returnValue = message;
         return message;
+      } else {
+        // Even if no pending changes, still mark the window as closed
+        localStorage.setItem(WINDOW_CLOSED_KEY, "true");
       }
     };
 
