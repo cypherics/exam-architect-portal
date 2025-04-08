@@ -1,5 +1,4 @@
-
-import { Section, Question } from '@/components/ExamBuilder';
+import { Section, Question } from '@/types/exam';
 
 interface RawExamData {
   exam_description: {
@@ -55,7 +54,6 @@ export interface ExportableExam {
   }[];
 }
 
-// Convert the raw imported JSON to our application's internal structure
 export const convertImportedExamToAppFormat = (data: RawExamData): {
   exam: {
     id: string;
@@ -66,7 +64,6 @@ export const convertImportedExamToAppFormat = (data: RawExamData): {
   },
   sections: Section[]
 } => {
-  // Convert exam description
   const exam = {
     id: Date.now().toString(),
     title: data.exam_description.title,
@@ -75,16 +72,13 @@ export const convertImportedExamToAppFormat = (data: RawExamData): {
     passingScore: data.exam_description.passing_score.toString()
   };
 
-  // Group questions by section
   const questionsBySection: Record<number, Question[]> = {};
   
-  // Process questions and their options
   data.questions.forEach(q => {
     if (!questionsBySection[q.section_id]) {
       questionsBySection[q.section_id] = [];
     }
     
-    // Find options for this question
     const questionOptions = data.options
       .filter(o => o.question_id === q.id)
       .map(o => ({
@@ -93,18 +87,16 @@ export const convertImportedExamToAppFormat = (data: RawExamData): {
         isCorrect: o.is_correct
       }));
     
-    // Create the question object
     questionsBySection[q.section_id].push({
       id: q.id.toString(),
       text: q.text,
       description: q.description,
       marks: q.marks,
       options: questionOptions,
-      language: q.language || "english" // Default to English if not specified
+      language: q.language || "english"
     });
   });
   
-  // Create sections with their questions
   const sections: Section[] = data.sections.map(s => ({
     id: s.id.toString(),
     title: s.title,
@@ -115,7 +107,6 @@ export const convertImportedExamToAppFormat = (data: RawExamData): {
   return { exam, sections };
 };
 
-// Convert app data to exportable JSON format
 export const convertAppDataToExportFormat = (
   exam: {
     id: string;
@@ -138,21 +129,17 @@ export const convertAppDataToExportFormat = (
     options: []
   };
   
-  // Process sections and their questions
   sections.forEach(section => {
     const sectionId = parseInt(section.id);
     
-    // Add section
     exportData.sections.push({
       id: sectionId,
       title: section.title
     });
     
-    // Process questions in this section
     section.questions.forEach(question => {
       const questionId = parseInt(question.id);
       
-      // Add question
       exportData.questions.push({
         id: questionId,
         section_id: sectionId,
@@ -162,7 +149,6 @@ export const convertAppDataToExportFormat = (
         language: question.language
       });
       
-      // Process options for this question
       question.options.forEach(option => {
         exportData.options.push({
           id: parseInt(option.id),
@@ -177,32 +163,26 @@ export const convertAppDataToExportFormat = (
   return exportData;
 };
 
-// Validate imported exam data
 export const validateExamData = (data: any): boolean => {
   if (!data) return false;
   
-  // Check required top-level properties
   if (!data.exam_description || !data.sections || !data.questions || !data.options) {
     return false;
   }
   
-  // Check exam_description
   const examDesc = data.exam_description;
   if (!examDesc.title || typeof examDesc.duration !== 'number' || typeof examDesc.passing_score !== 'number') {
     return false;
   }
   
-  // Check sections
   if (!Array.isArray(data.sections) || data.sections.length === 0) {
     return false;
   }
   
-  // Check questions
   if (!Array.isArray(data.questions)) {
     return false;
   }
   
-  // Check options
   if (!Array.isArray(data.options)) {
     return false;
   }
