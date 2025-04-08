@@ -88,7 +88,7 @@ export const useExamManager = () => {
                 description: "Your exam has been created successfully.",
             });
 
-            navigate(`/exam/${exam.id}`, { state: { examDetails: exam, sections } });
+            navigate(`/exam/${exam.id}`, { state: { examDetails: exam, sections: sections } });
         } catch (error) {
             console.error("Error creating exam:", error);
             toast({
