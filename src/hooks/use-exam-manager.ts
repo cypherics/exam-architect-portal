@@ -14,7 +14,7 @@ export const useExamManager = () => {
     // Use localStorage for saved exams and window closed state
     const [savedExams, setSavedExams] = useLocalStorage<ExamDescription[]>("savedExams", []);
     const [windowWasClosed, setWindowWasClosed] = useLocalStorage<boolean>("windowWasClosed", false);
-    
+
     // Regular state for current exam session
     const [sections, setSections] = useState<Section[]>([
         {
@@ -145,6 +145,7 @@ export const useExamManager = () => {
                 setExamDetails(importedExam);
                 setSections(importedSections);
 
+                navigate(`/exam/${importedExam.id}`, { state: { examDetails: importedExam, sections: importedSections } });
                 toast({
                     title: "Exam Imported",
                     description: `Successfully imported ${importedExam.title}`,

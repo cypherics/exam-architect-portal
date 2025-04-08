@@ -15,14 +15,14 @@ interface ExamMainProps {
     toggleSectionExpand?: (sectionId: string) => void;
 }
 
-const ExamMain: React.FC<ExamMainProps> = ({ 
-    exam, 
-    sections, 
-    addSection, 
-    updateSection, 
-    deleteSection, 
-    handleAddQuestion, 
-    toggleSectionExpand 
+const ExamMain: React.FC<ExamMainProps> = ({
+    exam,
+    sections,
+    addSection,
+    updateSection,
+    deleteSection,
+    handleAddQuestion,
+    toggleSectionExpand
 }) => {
     const { computedValues } = useExamMain({ exam, sections, addSection });
     const { totalQuestions, sectionCount } = computedValues;
