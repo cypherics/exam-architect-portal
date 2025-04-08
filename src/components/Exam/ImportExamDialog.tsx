@@ -1,10 +1,9 @@
 
-import React, { useRef } from "react";
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
+import { useImportExamDialog } from "@/hooks/useImportExamDialog";
 
 interface ImportExamDialogProps {
   open: boolean;
@@ -19,11 +18,7 @@ const ImportExamDialog: React.FC<ImportExamDialogProps> = ({
   onFileImport,
   importError,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
+  const { refs, actions } = useImportExamDialog({ onFileImport });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,13 +36,13 @@ const ImportExamDialog: React.FC<ImportExamDialogProps> = ({
               Import a JSON file containing an exam structure
             </p>
             <input
-              ref={fileInputRef}
+              ref={refs.fileInputRef}
               type="file"
               accept=".json"
-              onChange={onFileImport}
+              onChange={actions.onFileImport}
               className="hidden"
             />
-            <Button onClick={handleButtonClick} className="w-full">
+            <Button onClick={actions.handleButtonClick} className="w-full">
               Select JSON File
             </Button>
             {importError && (

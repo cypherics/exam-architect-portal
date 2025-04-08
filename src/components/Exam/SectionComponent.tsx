@@ -1,12 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Question, Section } from "@/types/exam";
+import { Section } from "@/types/exam";
 import { PlusCircle, Edit, Trash2, Check, X, ChevronDown, ChevronRight } from "lucide-react";
 import { QuestionCard } from "@/components/Question";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSectionComponent } from "@/hooks/useSectionComponent";
 
 interface SectionComponentProps {
   section: Section;
@@ -16,35 +17,21 @@ interface SectionComponentProps {
   onToggleExpand: () => void;
 }
 
-const SectionComponent: React.FC<SectionComponentProps> = ({
-  section,
-  onUpdate,
-  onDelete,
-  onAddQuestion,
-  onToggleExpand,
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(section.title);
-
-  const handleSaveTitle = () => {
-    if (editedTitle.trim()) {
-      onUpdate({ ...section, title: editedTitle });
-      setIsEditing(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditedTitle(section.title);
-    setIsEditing(false);
-  };
-
-  const handleDeleteQuestion = (questionId: string) => {
-    const updatedQuestions = section.questions.filter(q => q.id !== questionId);
-    onUpdate({ ...section, questions: updatedQuestions });
-  };
-
-  const totalMarks = section.questions.reduce((sum, q) => sum + q.marks, 0);
-  const questionCount = section.questions.length;
+const SectionComponent: React.FC<SectionComponentProps> = (props) => {
+  const { section, onUpdate, onDelete } = props;
+  
+  const { 
+    state: { isEditing, editedTitle, totalMarks, questionCount },
+    actions: { 
+      handleStartEditing, 
+      handleSaveTitle, 
+      handleCancelEdit, 
+      handleTitleChange,
+      handleDeleteQuestion,
+      onAddQuestion,
+      onToggleExpand
+    } 
+  } = useSectionComponent(props);
 
   return (
     <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
@@ -65,7 +52,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
             <div className="flex items-center gap-2 scale-in">
               <Input
                 value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
+                onChange={(e) => handleTitleChange(e.target.value)}
                 className="h-9 py-1 border-b-2 border-primary bg-blue-50/50 rounded-md focus:ring-2 focus:ring-primary/20"
                 autoFocus
               />
@@ -112,7 +99,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({
                   variant="ghost"
                   size="sm"
                   className="h-9 w-9 p-0 rounded-full transition-colors hover:bg-blue-100 hover:text-blue-700 active:scale-95"
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleStartEditing}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>

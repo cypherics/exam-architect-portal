@@ -1,8 +1,10 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ExamDescription } from "@/types/exam";
+import { useExamForm } from "@/hooks/useExamForm";
 
 interface ExamFormProps {
     exam: ExamDescription;
@@ -11,8 +13,9 @@ interface ExamFormProps {
     onCancel: () => void;
 }
 
-const ExamForm: React.FC<ExamFormProps> = ({ exam, onChange, onSubmit, onCancel }) => {
-    console.log(exam);
+const ExamForm: React.FC<ExamFormProps> = (props) => {
+    const { exam } = props;
+    const { actions } = useExamForm(props);
 
     return (
         <div className="grid gap-5 py-4">
@@ -22,7 +25,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ exam, onChange, onSubmit, onCancel 
                     id="title"
                     placeholder="e.g., Computer Science Fundamentals"
                     value={exam.title}
-                    onChange={(e) => onChange({ ...exam, title: e.target.value })}
+                    onChange={(e) => actions.handleTitleChange(e.target.value)}
                     className="input-underline rounded-lg"
                 />
             </div>
@@ -32,7 +35,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ exam, onChange, onSubmit, onCancel 
                     id="description"
                     placeholder="Brief description of the exam"
                     value={exam.description}
-                    onChange={(e) => onChange({ ...exam, description: e.target.value })}
+                    onChange={(e) => actions.handleDescriptionChange(e.target.value)}
                     className="input-underline rounded-lg"
                 />
             </div>
@@ -44,7 +47,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ exam, onChange, onSubmit, onCancel 
                         type="number"
                         placeholder="90"
                         value={exam.duration}
-                        onChange={(e) => onChange({ ...exam, duration: e.target.value })}
+                        onChange={(e) => actions.handleDurationChange(e.target.value)}
                         className="input-underline rounded-lg"
                     />
                 </div>
@@ -57,14 +60,14 @@ const ExamForm: React.FC<ExamFormProps> = ({ exam, onChange, onSubmit, onCancel 
                         min="0"
                         max="100"
                         value={exam.passingScore}
-                        onChange={(e) => onChange({ ...exam, passingScore: e.target.value })}
+                        onChange={(e) => actions.handlePassingScoreChange(e.target.value)}
                         className="input-underline rounded-lg"
                     />
                 </div>
             </div>
             <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={onCancel} className="rounded-lg">Cancel</Button>
-                <Button type="button" onClick={onSubmit} className="rounded-lg bg-gradient-header hover:shadow-button">Create Exam</Button>
+                <Button type="button" variant="outline" onClick={actions.onCancel} className="rounded-lg">Cancel</Button>
+                <Button type="button" onClick={actions.onSubmit} className="rounded-lg bg-gradient-header hover:shadow-button">Create Exam</Button>
             </div>
         </div>
     );

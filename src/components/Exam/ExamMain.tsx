@@ -1,14 +1,11 @@
 
 import { Button } from "@/components/ui/button";
-import {
-    PlusCircle,
-} from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import SectionComponent from "./SectionComponent";
+import { Section, ExamDescription } from "@/types/exam";
+import { useExamMain } from "@/hooks/useExamMain";
 
-import { Section, Question, ExamDescription } from "@/types/exam";
-
-
-interface ExamBuilderProps {
+interface ExamMainProps {
     exam: ExamDescription;
     sections: Section[];
     addSection?: () => void;
@@ -18,13 +15,19 @@ interface ExamBuilderProps {
     toggleSectionExpand?: (sectionId: string) => void;
 }
 
-
-
-const ExamMain: React.FC<ExamBuilderProps> = ({ exam, sections, addSection, updateSection, deleteSection, handleAddQuestion, toggleSectionExpand }) => {
-    const totalQuestions = sections.reduce((sum, section) => sum + section.questions.length, 0);
+const ExamMain: React.FC<ExamMainProps> = ({ 
+    exam, 
+    sections, 
+    addSection, 
+    updateSection, 
+    deleteSection, 
+    handleAddQuestion, 
+    toggleSectionExpand 
+}) => {
+    const { computedValues } = useExamMain({ exam, sections, addSection });
+    const { totalQuestions, sectionCount } = computedValues;
 
     return (
-
         <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="bg-white/50 backdrop-blur-sm border border-blue-100 rounded-xl p-6 mb-8 fade-in shadow-sm">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Exam Description</h2>
@@ -35,7 +38,7 @@ const ExamMain: React.FC<ExamBuilderProps> = ({ exam, sections, addSection, upda
                 <div>
                     <h2 className="text-xl font-semibold">Exam Sections</h2>
                     <p className="text-sm text-muted-foreground">
-                        {sections.length} section{sections.length !== 1 ? 's' : ''} •
+                        {sectionCount} section{sectionCount !== 1 ? 's' : ''} •
                         {totalQuestions} question{totalQuestions !== 1 ? 's' : ''}
                     </p>
                 </div>
@@ -50,7 +53,7 @@ const ExamMain: React.FC<ExamBuilderProps> = ({ exam, sections, addSection, upda
             </div>
 
             <div className="space-y-4">
-                {sections.map((section, index) => (
+                {sections.map((section) => (
                     <SectionComponent
                         key={section.id}
                         section={section}
@@ -76,8 +79,6 @@ const ExamMain: React.FC<ExamBuilderProps> = ({ exam, sections, addSection, upda
                 </div>
             )}
         </main>
-
-
     );
 };
 
