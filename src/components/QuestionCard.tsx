@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
-import { Question } from "./ExamBuilder";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Question } from "@/types/exam";
 
 interface QuestionCardProps {
   question: Question;
@@ -39,7 +39,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
   }, [autoSaved]);
 
   return (
-    <div 
+    <div
       className={cn(
         "question-container transition-all duration-300",
         question.language === "arabic" ? "font-noto rtl" : "",
@@ -54,13 +54,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="bg-blue-50 text-blue-700 border-blue-200 transition-colors duration-300"
           >
             {question.marks} mark{question.marks !== 1 ? 's' : ''}
           </Badge>
-          
+
           {showSavedIndicator && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 transition-all duration-300 animate-pulse">
               Saved
@@ -88,7 +88,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -128,13 +128,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
             key={option.id}
             className={cn(
               "p-2 rounded-md flex items-start gap-2 transition-all duration-300",
-              option.isCorrect 
-                ? "border-green-300 bg-green-50 hover:bg-green-100" 
+              option.isCorrect
+                ? "border-green-300 bg-green-50 hover:bg-green-100"
                 : "border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
             )}
             tabIndex={0}
           >
-            <div 
+            <div
               className={cn(
                 "rounded-full h-5 w-5 flex items-center justify-center text-xs transition-colors duration-300",
                 option.isCorrect
