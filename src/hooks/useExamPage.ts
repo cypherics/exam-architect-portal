@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useExamHandlers } from "@/hooks/use-exam-handlers";
 import { Question, Section, ExamDescription } from "@/types/exam";
+import { useWindowEvents } from "@/hooks/use-window-events";
 
 /**
  * Custom hook to manage the Exam page state and handlers
@@ -25,9 +26,17 @@ export const useExamPage = () => {
     locationSections || []
   );
   
-  // Initialize with either location state or saved state
-  const initialExamDetails = locationExamDetails || savedExamDetails;
-  const initialSections = locationSections || savedSections;
+  // Check if window was previously closed
+  const [windowWasClosed, setWindowWasClosed] = useLocalStorage<boolean>("windowWasClosed", false);
+  
+  // Initialize with either location state or saved state, but only if window wasn't closed
+  const initialExamDetails = windowWasClosed ? 
+    (locationExamDetails || null) : 
+    (locationExamDetails || savedExamDetails);
+    
+  const initialSections = windowWasClosed ? 
+    (locationSections || []) : 
+    (locationSections || savedSections);
 
   const {
     state: { sections, currentExam, pendingChanges },
@@ -39,6 +48,22 @@ export const useExamPage = () => {
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<"english" | "arabic" | null>(null);
+
+  // Handle window events for state preservation
+  useWindowEvents({
+    onBeforeUnload: () => {
+      console.log("Window is closing, setting window closed flag");
+      setWindowWasClosed(true);
+    }
+  });
+
+  // Reset window closed flag when component mounts
+  useEffect(() => {
+    if (windowWasClosed) {
+      console.log("Resetting window closed flag");
+      setWindowWasClosed(false);
+    }
+  }, [windowWasClosed, setWindowWasClosed]);
 
   // Sync state with localStorage when it changes
   useEffect(() => {

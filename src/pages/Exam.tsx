@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ExamHeader, ExamMain } from "@/components/Exam";
 import LanguageSelectionDialog from "@/dialogs/LanguageSelectionDialog";
 import QuestionDialog from "@/dialogs/QuestionDialog";
 import { useExamPage } from "@/hooks/useExamPage";
+import { useToast } from "@/components/ui/use-toast";
 
 const Exam = () => {
+    const { toast } = useToast();
     const {
         state: {
             sections,
@@ -28,6 +30,20 @@ const Exam = () => {
             setShowQuestionDialog
         }
     } = useExamPage();
+
+    // Notification for recovered state after accidental refresh
+    useEffect(() => {
+        if (currentExam && sections.length > 0) {
+            // Only show this if we have recovered state from localStorage
+            // and not from direct navigation
+            if (window.performance && performance.navigation.type === 1) {
+                toast({
+                    title: "Exam Restored",
+                    description: "Your exam data has been recovered after refresh.",
+                });
+            }
+        }
+    }, []);
 
     if (!currentExam) {
         return (
