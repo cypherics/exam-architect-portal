@@ -1,24 +1,40 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
-import ExamHeader from "@/components/Exam/ExamHeader";
-import ExamMain from "@/components/Exam/ExamMain";
+import { ExamHeader, ExamMain } from "@/components/Exam";
 import LanguageSelectionDialog from "@/dialogs/LanguageSelectionDialog";
 import QuestionDialog from "@/dialogs/QuestionDialog";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 import { useExamHandlers } from "@/hooks/use-exam-handlers";
-import { Question, Section } from "@/types/exam";
+import { Question, Section, ExamDescription } from "@/types/exam";
 
 const Exam = () => {
     const location = useLocation();
-    const { examDetails, sections: initialSections } = location.state;
+    const { examDetails: locationExamDetails, sections: locationSections } = location.state || {};
+    
+    // Use localStorage for persistent storage of exam state
+    const [savedExamDetails, setSavedExamDetails] = useLocalStorage<ExamDescription | null>(
+        "currentExamDetails",
+        locationExamDetails || null
+    );
+    
+    const [savedSections, setSavedSections] = useLocalStorage<Section[]>(
+        "currentExamSections",
+        locationSections || []
+    );
+    
+    // Initialize with either location state or saved state
+    const initialExamDetails = locationExamDetails || savedExamDetails;
+    const initialSections = locationSections || savedSections;
 
     const {
         state: { sections, currentExam, pendingChanges },
         actions: { addSection, deleteSection, updateSection, toggleSectionExpand },
-        setters: { setSections, setPendingChanges, setCurrentExam, },
-    } = useExamHandlers(initialSections, examDetails);
+        setters: { setSections: setLocalSections, setPendingChanges, setCurrentExam },
+    } = useExamHandlers(initialSections, initialExamDetails);
 
     const [showLanguageDialog, setShowLanguageDialog] = useState(false);
     const [showQuestionDialog, setShowQuestionDialog] = useState(false);
@@ -26,9 +42,31 @@ const Exam = () => {
     const [selectedLanguage, setSelectedLanguage] = useState<"english" | "arabic" | null>(null);
     const { toast } = useToast();
 
+    // Sync state with localStorage when it changes
+    useEffect(() => {
+        if (sections.length > 0) {
+            setSavedSections(sections);
+        }
+    }, [sections, setSavedSections]);
+
+    useEffect(() => {
+        if (currentExam) {
+            setSavedExamDetails(currentExam);
+        }
+    }, [currentExam, setSavedExamDetails]);
+
     const handleAddQuestion = (sectionId: string) => {
-        setSelectedSection(sectionId);
-        setShowLanguageDialog(true);
+        try {
+            setSelectedSection(sectionId);
+            setShowLanguageDialog(true);
+        } catch (error) {
+            console.error("Error adding question:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add question. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleLanguageSelected = (language: "english" | "arabic") => {
@@ -38,31 +76,64 @@ const Exam = () => {
     };
 
     const handleDeleteQuestion = (questionId: string, section: Section) => {
-        const updatedQuestions = section.questions.filter(q => q.id !== questionId);
-        updateSection({ ...section, questions: updatedQuestions });
+        try {
+            const updatedQuestions = section.questions.filter(q => q.id !== questionId);
+            updateSection({ ...section, questions: updatedQuestions });
+            
+            toast({
+                title: "Question Deleted",
+                description: "The question has been successfully removed.",
+            });
+        } catch (error) {
+            console.error("Error deleting question:", error);
+            toast({
+                title: "Error",
+                description: "Failed to delete question. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
-
 
     const handleQuestionAdded = (question: Question) => {
         if (!selectedSection) return;
 
-        const updatedSections = sections.map((section) =>
-            section.id === selectedSection
-                ? { ...section, questions: [...section.questions, question] }
-                : section
-        );
+        try {
+            const updatedSections = sections.map((section) =>
+                section.id === selectedSection
+                    ? { ...section, questions: [...section.questions, question] }
+                    : section
+            );
 
-        setSections(updatedSections);
-        setPendingChanges(true);
-        setShowQuestionDialog(false);
-        setSelectedSection(null);
-        setSelectedLanguage(null);
+            setLocalSections(updatedSections);
+            setPendingChanges(true);
+            setShowQuestionDialog(false);
+            setSelectedSection(null);
+            setSelectedLanguage(null);
 
-        toast({
-            title: "Question Added",
-            description: "Your question has been successfully added to the section.",
-        });
+            toast({
+                title: "Question Added",
+                description: "Your question has been successfully added to the section.",
+            });
+        } catch (error) {
+            console.error("Error adding question:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add question. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
+
+    if (!currentExam) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-4">Exam Not Found</h2>
+                    <p className="text-muted-foreground mb-6">The exam you're looking for doesn't exist or has been removed.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pb-20">

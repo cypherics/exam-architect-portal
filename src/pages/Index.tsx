@@ -1,19 +1,32 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useExamManager } from "@/hooks/use-exam-manager";
-import ExamForm from "@/components/Exam/ExamForm";
-import { PlusCircle, FileEdit, GraduationCap, Upload, Download } from "lucide-react";
+import { ExamForm } from "@/components/Exam";
+import ImportExamDialog from "@/components/Exam/ImportExamDialog";
+import { PlusCircle, FileEdit, GraduationCap, Upload } from "lucide-react";
 
 const Index = () => {
   const {
-    state: { savedExams, examDetails, sections, importError },
-    actions: { createExam, handleExamUpdate, handleFileChange },
-    setters: { setSections, setExamDetails },
+    state: { savedExams, examDetails, sections, importError, windowWasClosed },
+    actions: { createExam, handleExamUpdate, handleFileChange, checkWindowClosedState },
+    setters: { setSections, setExamDetails, setWindowWasClosed },
   } = useExamManager();
 
   const [showNewExamDialog, setShowNewExamDialog] = useState(false);
   const [showImportExamDialog, setShowImportExamDialog] = useState(false);
+
+  // Check if window was previously closed on component mount
+  useEffect(() => {
+    console.log("Index component mounted, checking localStorage");
+    const wasWindowClosed = checkWindowClosedState();
+    
+    if (wasWindowClosed) {
+      // Reset the window closed flag for future sessions
+      setWindowWasClosed(false);
+    }
+  }, [checkWindowClosedState, setWindowWasClosed]);
 
   return (
     <div className="min-h-screen bg-gradient-landing overflow-hidden">
@@ -86,18 +99,21 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle>Create New Exam</DialogTitle>
           </DialogHeader>
-          <ExamForm exam={examDetails} onChange={setExamDetails} onSubmit={() => createExam(examDetails)} onCancel={() => setShowNewExamDialog(false)} />
+          <ExamForm
+            exam={examDetails}
+            onChange={setExamDetails}
+            onSubmit={() => createExam(examDetails)}
+            onCancel={() => setShowNewExamDialog(false)}
+          />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showImportExamDialog} onOpenChange={setShowImportExamDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import Exam</DialogTitle>
-          </DialogHeader>
-          {/* Import Logic */}
-        </DialogContent>
-      </Dialog>
+      <ImportExamDialog
+        open={showImportExamDialog}
+        onOpenChange={setShowImportExamDialog}
+        onFileImport={handleFileChange}
+        importError={importError}
+      />
     </div>
   );
 };
