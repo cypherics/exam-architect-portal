@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Question } from "@/types/exam";
+import { useQuestionCard } from "@/hooks/useQuestionCard";
 
 interface QuestionCardProps {
   question: Question;
@@ -15,28 +16,12 @@ interface QuestionCardProps {
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit, autoSaved = false }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
-
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      action();
-    }
-  };
-
-  // Show saved indicator when autoSaved prop changes to true
-  useEffect(() => {
-    if (autoSaved) {
-      console.log("Auto-saved indicator triggered");
-      setShowSavedIndicator(true);
-      const timer = setTimeout(() => {
-        setShowSavedIndicator(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [autoSaved]);
+  const {
+    showSavedIndicator,
+    handleKeyDown,
+    handleMouseEnter,
+    handleMouseLeave
+  } = useQuestionCard({ autoSaved, onEdit, onDelete });
 
   return (
     <div
@@ -46,8 +31,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete, onEdit,
         "hover:shadow-elevation border border-blue-100 hover:border-blue-200 bg-gradient-to-b from-white to-blue-50/30",
         showSavedIndicator ? "saved-indicator" : ""
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       tabIndex={0}
       aria-label={`Question: ${question.text}`}
       role="region"
