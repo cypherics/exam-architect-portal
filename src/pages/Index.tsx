@@ -1,32 +1,18 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useExamManager } from "@/hooks/use-exam-manager";
 import { ExamForm } from "@/components/Exam";
 import ImportExamDialog from "@/components/Exam/ImportExamDialog";
 import { PlusCircle, FileEdit, GraduationCap, Upload } from "lucide-react";
+import { useIndexPage } from "@/hooks/useIndexPage";
 
 const Index = () => {
   const {
-    state: { savedExams, examDetails, sections, importError, windowWasClosed },
-    actions: { createExam, handleExamUpdate, handleFileChange, checkWindowClosedState },
-    setters: { setSections, setExamDetails, setWindowWasClosed },
-  } = useExamManager();
-
-  const [showNewExamDialog, setShowNewExamDialog] = useState(false);
-  const [showImportExamDialog, setShowImportExamDialog] = useState(false);
-
-  // Check if window was previously closed on component mount
-  useEffect(() => {
-    console.log("Index component mounted, checking localStorage");
-    const wasWindowClosed = checkWindowClosedState();
-    
-    if (wasWindowClosed) {
-      // Reset the window closed flag for future sessions
-      setWindowWasClosed(false);
-    }
-  }, [checkWindowClosedState, setWindowWasClosed]);
+    state: { examDetails, sections, importError, showNewExamDialog, showImportExamDialog },
+    actions: { createExam, handleFileChange },
+    setters: { setExamDetails, setShowNewExamDialog, setShowImportExamDialog }
+  } = useIndexPage();
 
   return (
     <div className="min-h-screen bg-gradient-landing overflow-hidden">
