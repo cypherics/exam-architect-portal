@@ -1,38 +1,16 @@
-import React, { useState } from "react";
-
 import { ExamHeader, ExamMain } from "@/components/Exam";
 import LanguageSelectionDialog from "@/dialogs/LanguageSelectionDialog";
 import QuestionDialog from "@/dialogs/QuestionDialog";
-import { useExamPage } from "@/hooks/useExamPage";
-import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
-import NavigationDialog from "@/dialogs/NavigationDialog";
+import { useExamPageContext } from "@/hooks/ExamPageContext";
 
 /**
  * Exam page component for creating and editing exams
  * Handles state preservation, dialogs, and question/section operations
  */
 const Exam: React.FC = () => {
-    const { state, actions, setters } = useExamPage();
-
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [unsavedChanges, setUnsavedChanges] = useState(false);
-
-    // Callback that is triggered when the unsaved changes state is updated
-    const handleUnsavedChanges = (hasChanges: boolean) => {
-        setUnsavedChanges(hasChanges);
-    };
-
-    // Confirm leaving the page
-    const handleConfirm = () => {
-        setDialogOpen(false);
-        // Perform cleanup or other operations as needed (e.g., saving data)
-    };
-
-    // Cancel leaving the page
-    const handleCancel = () => {
-        setDialogOpen(false);
-    };
+    // const { state, actions, setters } = useExamPage();
+    const { state, actions, setters } = useExamPageContext();
 
     if (!state.currentExam) {
         return (
@@ -49,23 +27,20 @@ const Exam: React.FC = () => {
         <div className="min-h-screen bg-background pb-20">
 
             <header className="bg-white shadow-sm sticky top-0 z-10 transition-all duration-300">
-                <ExamHeader exam={state.currentExam} sections={state.sections} />
+                <ExamHeader exam={state.currentExam} sections={state.sectionStates.sections} />
             </header>
 
             <ExamMain
                 exam={state.currentExam}
-                sections={state.sections}
-                addSection={actions.addSection}
-                deleteSection={actions.deleteSection}
-                updateSection={actions.updateSection}
-                toggleSectionExpand={actions.toggleSectionExpand}
-                handleAddQuestion={actions.handleAddQuestion}
+                sections={state.sectionStates.sections}
+
             />
 
-            <LanguageSelectionDialog open={state.showLanguageDialog} onOpenChange={setDialogOpen} onLanguageSelect={actions.handleLanguageSelected} />
-            <QuestionDialog open={state.showQuestionDialog} onOpenChange={setDialogOpen} onAddQuestion={actions.handleQuestionAdded} language={state.selectedLanguage || "english"} />
+            <LanguageSelectionDialog open={state.questionStates.showLanguageDialog}
+                onOpenChange={setters.questionSetters.setShowLanguageDialog} onLanguageSelect={actions.questionActions.handleLanguageSelected} />
+            <QuestionDialog open={state.questionStates.showQuestionDialog} onOpenChange={setters.questionSetters.setShowQuestionDialog} onAddQuestion={actions.questionActions.handleQuestionAdded} language={state.questionStates.selectedLanguage || "english"} />
 
-            {/* <NavigationDialog open={dialogOpen} onConfirm={handleConfirm} onCancel={handleCancel} /> */}
+
 
         </div>
     );

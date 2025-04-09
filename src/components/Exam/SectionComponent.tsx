@@ -7,32 +7,15 @@ import { PlusCircle, Edit, Trash2, Check, X, ChevronDown, ChevronRight } from "l
 import { QuestionCard } from "@/components/Question";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useSectionComponent } from "@/hooks/useSectionComponent";
-import { useUnsavedChanges } from "@/hooks/useUnsavedChanges"; // Import the hook
+import { useExamPageContext } from "@/hooks/ExamPageContext";
 
 interface SectionComponentProps {
   section: Section;
-  onUpdate: (section: Section) => void;
-  onDelete: (id: string) => void;
-  onAddQuestion: () => void;
-  onToggleExpand: () => void;
 }
 
-const SectionComponent: React.FC<SectionComponentProps> = (props) => {
-  const { section, onUpdate, onDelete } = props;
-
-  const {
-    state: { isEditing, editedTitle, totalMarks, questionCount },
-    actions: {
-      handleStartEditing,
-      handleSaveTitle,
-      handleCancelEdit,
-      handleTitleChange,
-      handleDeleteQuestion,
-      onAddQuestion,
-      onToggleExpand
-    }
-  } = useSectionComponent(props);
+export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
+  const { section } = props;
+  const { state, actions, setters } = useExamPageContext();
 
   return (
     <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
@@ -42,25 +25,25 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
             variant="ghost"
             size="sm"
             className="p-0 h-9 w-9 rounded-full transition-all duration-300 hover:bg-blue-100"
-            onClick={onToggleExpand}
+            onClick={() => actions.sectionActions.toggleSectionExpand(section.id)}
           >
             {section.isExpanded ?
               <ChevronDown className="h-5 w-5 transition-transform duration-300" /> :
               <ChevronRight className="h-5 w-5 transition-transform duration-300" />}
           </Button>
 
-          {isEditing ? (
+          {state.sectionStates.isEditing ? (
             <div className="flex items-center gap-2 scale-in">
               <Input
-                value={editedTitle}
-                onChange={(e) => handleTitleChange(e.target.value)}
+                value={state.sectionStates.editedTitle}
+                onChange={(e) => actions.sectionActions.handleTitleChange(e.target.value)}
                 className="h-9 py-1 border-b-2 border-primary bg-blue-50/50 rounded-md focus:ring-2 focus:ring-primary/20"
                 autoFocus
               />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={handleSaveTitle} className="transition-all duration-200 hover:bg-green-100 hover:text-green-700">
+                    <Button size="sm" variant="ghost" onClick={() => actions.sectionActions.handleSaveTitle(section)} className="transition-all duration-200 hover:bg-green-100 hover:text-green-700">
                       <Check className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -73,7 +56,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="transition-all duration-200 hover:bg-red-100 hover:text-red-700">
+                    <Button size="sm" variant="ghost" onClick={() => actions.sectionActions.handleCancelEdit(section)} className="transition-all duration-200 hover:bg-red-100 hover:text-red-700">
                       <X className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
@@ -90,7 +73,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
 
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground mr-2 bg-blue-50/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
-            {questionCount} question{questionCount !== 1 ? 's' : ''} • {totalMarks} marks
+            {state.sectionStates.questionCount} question{state.sectionStates.questionCount !== 1 ? 's' : ''} • {state.sectionStates.totalMarks} marks
           </div>
 
           <TooltipProvider>
@@ -100,7 +83,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
                   variant="ghost"
                   size="sm"
                   className="h-9 w-9 p-0 rounded-full transition-colors hover:bg-blue-100 hover:text-blue-700 active:scale-95"
-                  onClick={handleStartEditing}
+                  onClick={() => actions.sectionActions.handleStartEditing()}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -118,7 +101,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
                   variant="ghost"
                   size="sm"
                   className="h-9 w-9 p-0 rounded-full transition-colors hover:bg-red-100 hover:text-red-700 active:scale-95"
-                  onClick={() => onDelete(section.id)}
+                  onClick={() => actions.sectionActions.deleteSection(section.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -143,7 +126,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
                 >
                   <QuestionCard
                     question={question}
-                    onDelete={() => handleDeleteQuestion(question.id)}
+                    onDelete={() => actions.questionActions.handleDeleteQuestion(question.id, section)}
                   />
                 </div>
               ))}
@@ -156,7 +139,7 @@ const SectionComponent: React.FC<SectionComponentProps> = (props) => {
         )}
 
         <Button
-          onClick={onAddQuestion}
+          onClick={() => actions.questionActions.handleAddQuestion(section.id)}
           variant="outline"
           className="flex items-center gap-2 w-full mt-4 transition-all duration-300 bg-gradient-to-r from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 hover:border-blue-300 shadow-sm active:scale-[0.99]"
         >

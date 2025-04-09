@@ -4,29 +4,21 @@ import { PlusCircle } from "lucide-react";
 import SectionComponent from "./SectionComponent";
 import { Section, ExamDescription } from "@/types/exam";
 import { useExamMain } from "@/hooks/useExamMain";
+import { useExamPageContext } from "@/hooks/ExamPageContext";
 
 interface ExamMainProps {
     exam: ExamDescription;
     sections: Section[];
-    addSection?: () => void;
-    updateSection?: (section: Section) => void;
-    deleteSection?: (sectionId: string) => void;
-    handleAddQuestion?: (sectionId: string) => void;
-    toggleSectionExpand?: (sectionId: string) => void;
 }
 
 const ExamMain: React.FC<ExamMainProps> = ({
     exam,
     sections,
-    addSection,
-    updateSection,
-    deleteSection,
-    handleAddQuestion,
-    toggleSectionExpand
 }) => {
     const { computedValues } = useExamMain({ exam, sections });
     const { totalQuestions, sectionCount } = computedValues;
 
+    const { state, actions, setters } = useExamPageContext();
     return (
         <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="bg-white/50 backdrop-blur-sm border border-blue-100 rounded-xl p-6 mb-8 fade-in shadow-sm">
@@ -43,7 +35,7 @@ const ExamMain: React.FC<ExamMainProps> = ({
                     </p>
                 </div>
                 <Button
-                    onClick={addSection}
+                    onClick={actions.sectionActions.addSection}
                     variant="outline"
                     className="flex items-center gap-2 btn-hover"
                 >
@@ -57,10 +49,6 @@ const ExamMain: React.FC<ExamMainProps> = ({
                     <SectionComponent
                         key={section.id}
                         section={section}
-                        onUpdate={updateSection}
-                        onDelete={deleteSection}
-                        onAddQuestion={() => handleAddQuestion(section.id)}
-                        onToggleExpand={() => toggleSectionExpand(section.id)}
                     />
                 ))}
             </div>
@@ -69,7 +57,7 @@ const ExamMain: React.FC<ExamMainProps> = ({
                 <div className="text-center py-16 border-2 border-dashed border-muted rounded-xl">
                     <p className="text-muted-foreground mb-4">No sections added yet.</p>
                     <Button
-                        onClick={addSection}
+                        onClick={actions.sectionActions.addSection}
                         variant="outline"
                         className="flex items-center gap-2 mx-auto btn-hover"
                     >

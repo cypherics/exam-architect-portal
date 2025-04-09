@@ -4,8 +4,7 @@ import { ExamDescription, Section } from "@/types/exam";
 import { useToast } from "@/components/ui/use-toast";
 import { convertImportedExamToAppFormat, validateExamData } from "@/utils/examConverter";
 import { useNavigate } from "react-router-dom";
-import { useLocalStorage } from "./use-local-storage";
-import { useWindowEvents } from "./use-window-events";
+
 
 /**
  * Custom hook for managing exam data, persistence, and related operations
@@ -16,8 +15,7 @@ export const useExamManager = () => {
     const navigate = useNavigate();
 
     // Use localStorage for saved exams and window closed state
-    const [savedExams, setSavedExams] = useLocalStorage<ExamDescription[]>("savedExams", []);
-    const [windowWasClosed, setWindowWasClosed] = useLocalStorage<boolean>("windowWasClosed", false);
+    const [savedExams, setSavedExams] = useState<ExamDescription[]>([]);
 
     // Regular state for current exam session
     const [sections, setSections] = useState<Section[]>([
@@ -37,26 +35,6 @@ export const useExamManager = () => {
         passingScore: "",
     });
 
-    // Handle window unload events to detect browser/tab closure
-    useWindowEvents({
-        onBeforeUnload: () => {
-            console.log("Window is closing, setting window closed flag");
-            setWindowWasClosed(true);
-        }
-    });
-
-    /**
-     * Checks if the window was previously closed and handles state accordingly
-     * @returns boolean - Whether the window was previously closed
-     */
-    const checkWindowClosedState = useCallback(() => {
-        console.log("Window was previously closed:", windowWasClosed);
-        if (windowWasClosed) {
-            console.log("Window was closed and reopened - showing landing page and clearing state");
-            return true;
-        }
-        return false;
-    }, [windowWasClosed]);
 
     /**
      * Creates a new exam and navigates to the exam editor
@@ -194,19 +172,16 @@ export const useExamManager = () => {
             examDetails,
             sections,
             importError,
-            windowWasClosed,
         },
         setters: {
             setExamDetails,
             setSections,
             setImportError,
-            setWindowWasClosed,
         },
         actions: {
             createExam,
             handleExamUpdate,
             handleFileChange,
-            checkWindowClosedState,
         },
     };
 };
