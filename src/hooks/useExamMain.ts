@@ -5,7 +5,6 @@ import { ExamDescription, Section } from "@/types/exam";
 interface UseExamMainProps {
   exam: ExamDescription;
   sections: Section[];
-  addSection?: () => void;
 }
 
 /**
@@ -17,14 +16,14 @@ export const useExamMain = ({ sections }: UseExamMainProps) => {
   const computedValues = useMemo(() => {
     // Calculate total number of questions across all sections
     const totalQuestions = sections.reduce((sum, section) => sum + section.questions.length, 0);
-    
+
     // Calculate total marks across all questions
     const totalMarks = sections.reduce(
       (sum, section) => sum + section.questions.reduce(
         (secSum, question) => secSum + question.marks, 0
       ), 0
     );
-    
+
     return {
       totalQuestions,
       totalMarks,

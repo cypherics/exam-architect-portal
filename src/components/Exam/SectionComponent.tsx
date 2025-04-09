@@ -8,6 +8,7 @@ import { QuestionCard } from "@/components/Question";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSectionComponent } from "@/hooks/useSectionComponent";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges"; // Import the hook
 
 interface SectionComponentProps {
   section: Section;
@@ -19,18 +20,18 @@ interface SectionComponentProps {
 
 const SectionComponent: React.FC<SectionComponentProps> = (props) => {
   const { section, onUpdate, onDelete } = props;
-  
-  const { 
+
+  const {
     state: { isEditing, editedTitle, totalMarks, questionCount },
-    actions: { 
-      handleStartEditing, 
-      handleSaveTitle, 
-      handleCancelEdit, 
+    actions: {
+      handleStartEditing,
+      handleSaveTitle,
+      handleCancelEdit,
       handleTitleChange,
       handleDeleteQuestion,
       onAddQuestion,
       onToggleExpand
-    } 
+    }
   } = useSectionComponent(props);
 
   return (

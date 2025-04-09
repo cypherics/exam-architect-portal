@@ -24,7 +24,7 @@ const ExamMain: React.FC<ExamMainProps> = ({
     handleAddQuestion,
     toggleSectionExpand
 }) => {
-    const { computedValues } = useExamMain({ exam, sections, addSection });
+    const { computedValues } = useExamMain({ exam, sections });
     const { totalQuestions, sectionCount } = computedValues;
 
     return (

@@ -25,7 +25,7 @@ export const useSectionComponent = ({
 
   // Title editing handlers
   const handleStartEditing = () => setIsEditing(true);
-  
+
   const handleSaveTitle = () => {
     if (editedTitle.trim()) {
       onUpdate({ ...section, title: editedTitle });
