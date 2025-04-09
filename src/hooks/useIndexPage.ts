@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useExamManager } from "@/hooks/use-exam-manager";
 import { useToast } from "@/components/ui/use-toast";
 

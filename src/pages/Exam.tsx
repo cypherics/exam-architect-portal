@@ -9,7 +9,6 @@ import { useExamPageContext } from "@/hooks/ExamPageContext";
  * Handles state preservation, dialogs, and question/section operations
  */
 const Exam: React.FC = () => {
-    // const { state, actions, setters } = useExamPage();
     const { state, actions, setters } = useExamPageContext();
 
     if (!state.currentExam) {
