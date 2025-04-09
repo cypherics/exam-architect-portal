@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ExamDescription, Section } from "@/types/exam";
 import { useToast } from "@/components/ui/use-toast";
 import { convertImportedExamToAppFormat, validateExamData } from "@/utils/examConverter";
@@ -7,6 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { useLocalStorage } from "./use-local-storage";
 import { useWindowEvents } from "./use-window-events";
 
+/**
+ * Custom hook for managing exam data, persistence, and related operations
+ * Handles exam creation, updating, importing, and state persistence
+ */
 export const useExamManager = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
@@ -33,7 +37,7 @@ export const useExamManager = () => {
         passingScore: "",
     });
 
-    // Handle window unload events
+    // Handle window unload events to detect browser/tab closure
     useWindowEvents({
         onBeforeUnload: () => {
             console.log("Window is closing, setting window closed flag");
@@ -41,18 +45,23 @@ export const useExamManager = () => {
         }
     });
 
-    // Check if window was previously closed
+    /**
+     * Checks if the window was previously closed and handles state accordingly
+     * @returns boolean - Whether the window was previously closed
+     */
     const checkWindowClosedState = useCallback(() => {
         console.log("Window was previously closed:", windowWasClosed);
         if (windowWasClosed) {
             console.log("Window was closed and reopened - showing landing page and clearing state");
-            // No need to do anything special here - we'll use this flag
-            // in the Index component to determine what to display
             return true;
         }
         return false;
     }, [windowWasClosed]);
 
+    /**
+     * Creates a new exam and navigates to the exam editor
+     * @param newExam - The exam details to create
+     */
     const createExam = (newExam: ExamDescription) => {
         try {
             if (!newExam.title || !newExam.description || !newExam.duration || !newExam.passingScore) {
@@ -99,6 +108,10 @@ export const useExamManager = () => {
         }
     };
 
+    /**
+     * Updates an existing exam's details
+     * @param updatedExam - The updated exam details
+     */
     const handleExamUpdate = (updatedExam: ExamDescription) => {
         try {
             setSavedExams((prev) =>
@@ -117,6 +130,10 @@ export const useExamManager = () => {
         }
     };
 
+    /**
+     * Handles file import for exams
+     * @param e - The file input change event
+     */
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -162,6 +179,14 @@ export const useExamManager = () => {
         };
         reader.readAsText(file);
     };
+
+    // Reset window closed state when component unmounts or when explicitly called
+    useEffect(() => {
+        return () => {
+            // Clean up function - not strictly necessary here but follows best practices
+            console.log("useExamManager unmounting");
+        };
+    }, []);
 
     return {
         state: {

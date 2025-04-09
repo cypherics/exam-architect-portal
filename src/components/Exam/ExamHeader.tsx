@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2 } from "lucide-react";
 import { ExamDescription } from "@/types/exam";
@@ -8,6 +9,10 @@ interface ExamHeaderProps {
     exam: ExamDescription;
 }
 
+/**
+ * Header component for the exam editor
+ * Displays exam metadata and actions
+ */
 const ExamHeader: React.FC<ExamHeaderProps> = ({ exam }) => {
     const { examData } = useExamHeader({ exam });
     
@@ -19,12 +24,12 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({ exam }) => {
                         <h1 className="text-2xl font-bold text-foreground">{examData.title}</h1>
                         <div className="flex items-center text-sm text-muted-foreground gap-3 mt-1">
                             <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
-                                <span>{examData.duration} minutes</span>
+                                <Clock className="h-4 w-4" aria-hidden="true" />
+                                <span>{examData.formattedDuration}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span>Passing score: {examData.passingScore}%</span>
+                                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                <span>Passing score: {examData.formattedPassingScore}</span>
                             </div>
                         </div>
                     </div>

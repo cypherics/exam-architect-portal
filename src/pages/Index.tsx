@@ -7,7 +7,11 @@ import ImportExamDialog from "@/components/Exam/ImportExamDialog";
 import { PlusCircle, FileEdit, GraduationCap, Upload } from "lucide-react";
 import { useIndexPage } from "@/hooks/useIndexPage";
 
-const Index = () => {
+/**
+ * Landing page component for the exam creator application
+ * Provides options to create new exams or import existing ones
+ */
+const Index: React.FC = () => {
   const {
     state: { examDetails, sections, importError, showNewExamDialog, showImportExamDialog },
     actions: { createExam, handleFileChange },
