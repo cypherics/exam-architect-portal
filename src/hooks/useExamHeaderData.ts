@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { ExamDescription } from "@/types/exam";
 
-interface UseExamHeaderProps {
+interface UseExamHeaderDataProps {
   exam: ExamDescription;
 }
 
@@ -10,7 +10,7 @@ interface UseExamHeaderProps {
  * Custom hook to manage ExamHeader component
  * Provides processed exam data for display
  */
-export const useExamHeader = ({ exam }: UseExamHeaderProps) => {
+export const useExamHeaderData = ({ exam }: UseExamHeaderDataProps) => {
   // Compute derived data using useMemo to optimize performance
   const examData = useMemo(() => ({
     title: exam.title,

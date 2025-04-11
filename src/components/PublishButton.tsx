@@ -5,6 +5,9 @@ import { Send } from 'lucide-react';
 import { usePublishExam } from '@/hooks/usePublishExam';
 import { PublishOverlay } from '@/components/PublishOverlay'; // Assuming it's a reusable overlay component
 import { Question, Section, ExamDescription } from "@/types/exam";
+import { useIsExamNew } from "@/context/IsExamNewContext";
+import { useExamPageContext } from "@/context/ExamPageContext";
+
 
 interface PublishButtonProps {
     exam: ExamDescription | null;
@@ -12,7 +15,10 @@ interface PublishButtonProps {
 }
 
 const PublishButton: React.FC<PublishButtonProps> = ({ exam, sections }) => {
-    const { isPublishing, handlePublish } = usePublishExam({ exam, sections });
+    const { isExamNew: isExamNew, setIsNewExam: setIsNewExam } = useIsExamNew();
+    const { state, actions, setters } = useExamPageContext();
+
+    const { isPublishing, handlePublish } = usePublishExam({ exam, sections, state, isExamNew });
 
     return (
         <>

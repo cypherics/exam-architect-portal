@@ -15,8 +15,11 @@ export interface ExamDescription {
  */
 export interface Option {
     id: string;
+    question_id: string;
     text: string;
     isCorrect: boolean;
+    isOptionEdited: boolean;
+    isOptionNew: boolean;
 }
 
 /**
@@ -29,11 +32,14 @@ export type QuestionLanguage = "english" | "arabic";
  */
 export interface Question {
     id: string;
+    section_id: string;
     language: QuestionLanguage;
     text: string;
     description: string;
     options: Option[];
     marks: number;
+    isQuestionEdited: boolean;
+    isQuestionNew: boolean;
 }
 
 /**
@@ -44,6 +50,9 @@ export interface Section {
     title: string;
     questions: Question[];
     isExpanded: boolean;
+    isSectionEdited: boolean;
+    isSectionNew: boolean;
+
 }
 
 /**

@@ -3,27 +3,24 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import SectionComponent from "./SectionComponent";
 import { Section, ExamDescription } from "@/types/exam";
-import { useExamMain } from "@/hooks/useExamMain";
-import { useExamPageContext } from "@/hooks/ExamPageContext";
+import { useExamPageContext } from "@/context/ExamPageContext";
+import { useSectionDerivedValues } from "@/hooks/useSectionDerivedValues";
 
-interface ExamMainProps {
-    exam: ExamDescription;
-    sections: Section[];
-}
+import React from "react";
 
-const ExamMain: React.FC<ExamMainProps> = ({
-    exam,
-    sections,
-}) => {
-    const { computedValues } = useExamMain({ exam, sections });
+interface ExamMainProps { }
+
+const ExamMain: React.FC<ExamMainProps> = ({ }) => {
+    const { state, actions, setters } = useExamPageContext();
+
+    const { computedValues } = useSectionDerivedValues({ exam: state.currentExam, sections: state.sectionStates.sections });
     const { totalQuestions, sectionCount } = computedValues;
 
-    const { state, actions, setters } = useExamPageContext();
     return (
         <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="bg-white/50 backdrop-blur-sm border border-blue-100 rounded-xl p-6 mb-8 fade-in shadow-sm">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Exam Description</h2>
-                <p className="text-muted-foreground">{exam.description}</p>
+                <p className="text-muted-foreground">{state.currentExam.description}</p>
             </div>
 
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -45,7 +42,7 @@ const ExamMain: React.FC<ExamMainProps> = ({
             </div>
 
             <div className="space-y-4">
-                {sections.map((section) => (
+                {state.sectionStates.sections.map((section) => (
                     <SectionComponent
                         key={section.id}
                         section={section}
@@ -53,7 +50,7 @@ const ExamMain: React.FC<ExamMainProps> = ({
                 ))}
             </div>
 
-            {sections.length === 0 && (
+            {state.sectionStates.sections.length === 0 && (
                 <div className="text-center py-16 border-2 border-dashed border-muted rounded-xl">
                     <p className="text-muted-foreground mb-4">No sections added yet.</p>
                     <Button

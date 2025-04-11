@@ -5,21 +5,26 @@ import { useSectionManager } from "@/hooks/useSections";
 import { useQuestionDialog } from "@/hooks/useQuestions";
 import { useSectionManagerProps } from "@/hooks/useSections";
 import { useQuestionDialogProps } from "@/hooks/useQuestions";
+import { useOptionProps } from "@/hooks/useOptions";
+import { useOption } from "@/hooks/useOptions";
 
 export interface useExamPageProps {
   state: {
     currentExam: ExamDescription | null;
     sectionStates: useSectionManagerProps["sectionStates"];
     questionStates: useQuestionDialogProps["questionStates"];
+    optionStates: useOptionProps["optionStates"];
     pendingChanges: boolean;
   };
   actions: {
     sectionActions: useSectionManagerProps["sectionActions"];
     questionActions: useQuestionDialogProps["questionActions"];
+    optionActions: useOptionProps["optionActions"];
   };
   setters: {
     sectionSetters: useSectionManagerProps["sectionSetters"];
     questionSetters: useQuestionDialogProps["questionSetters"];
+    optionSetters: useOptionProps["optionSetters"];
   };
 
 }
@@ -40,33 +45,35 @@ export const useExamPage = (): useExamPageProps => {
 
   // Section logic
   const {
-    sectionStates,
-    sectionActions,
-    sectionSetters,
+    sectionStates, sectionActions, sectionSetters,
   } = useSectionManager(locationSections || []);
 
   // Dialog logic
-  const {
-    questionStates,
-    questionActions,
-    questionSetters,
+  const { questionStates, questionActions, questionSetters,
   } = useQuestionDialog(sectionStates.sections, sectionActions.updateSection);
 
+  const { optionStates, optionSetters, optionActions
+  } = useOption(questionActions.handleGenerateQuestionWithOption);
+
+  // Update}
   // Return combined state, actions, and setters
   return {
     state: {
       currentExam,
       sectionStates,
       questionStates,
+      optionStates,
       pendingChanges,
     },
     actions: {
       sectionActions,
       questionActions,
+      optionActions,
     },
     setters: {
       sectionSetters,
       questionSetters,
+      optionSetters
     },
   };
 };

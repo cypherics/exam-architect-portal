@@ -3,20 +3,19 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2 } from "lucide-react";
 import { ExamDescription, Section } from "@/types/exam";
-import { useExamHeader } from "@/hooks/useExamHeader";
+import { useExamHeaderData } from "@/hooks/useExamHeaderData";
 import PublishButton from "@/components/PublishButton";
+import { useExamPageContext } from "@/context/ExamPageContext";
 
-interface ExamHeaderProps {
-    exam: ExamDescription;
-    sections: Section[];
-}
+interface ExamHeaderProps { }
 
 /**
  * Header component for the exam editor
  * Displays exam metadata and actions
  */
-const ExamHeader: React.FC<ExamHeaderProps> = ({ exam, sections }) => {
-    const { examData } = useExamHeader({ exam });
+const ExamHeader: React.FC<ExamHeaderProps> = ({ }) => {
+    const { state, actions, setters } = useExamPageContext();
+    const { examData } = useExamHeaderData({ exam: state.currentExam });
 
     return (
         <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8">
@@ -38,7 +37,7 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({ exam, sections }) => {
                 </div>
 
                 <div>
-                    <PublishButton exam={exam} sections={sections} />
+                    <PublishButton exam={state.currentExam} sections={state.sectionStates.sections} />
                 </div>
             </div>
         </div>

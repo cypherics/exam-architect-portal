@@ -1,5 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Section } from "@/types/exam";
+import { generateNumericId } from "@/utils/idGenerator";
+
+
+export const defaultSection = () => ({
+    id: generateNumericId(4),
+    title: "Section 1",
+    questions: [],
+    isExpanded: true,
+    isSectionEdited: false,
+    isSectionNew: true,
+});
+
 
 export interface useSectionManagerProps {
     sectionStates: {
@@ -8,14 +20,13 @@ export interface useSectionManagerProps {
         editedTitle: string;
         totalMarks: number;
         questionCount: number;
+        deletedSectionId: string[];
     };
     sectionActions: {
         addSection: () => void;
-        deleteSection: (sectionId: string) => void;
+        deleteSection: (section: Section) => void;
         updateSection: (updatedSection: Section) => void;
         toggleSectionExpand: (sectionId: string) => void;
-        handleTotalMarksChange: (section: Section) => void;
-        handleQuestionCountChange: (section: Section) => void;
         handleStartEditing: () => void;
         handleSaveTitle: (section: Section) => void;
         handleCancelEdit: (section: Section) => void;
@@ -40,24 +51,7 @@ export const useSectionManager = (
     const [editedTitle, setEditedTitle] = useState<string>("");
     const [totalMarks, setTotalMarks] = useState<number>(0);
     const [questionCount, setQuestionCount] = useState<number>(0);
-
-    /**
-     * Updates the total marks based on the questions in a section.
-     * 
-     * @param section - The section whose questions' marks are summed up.
-     */
-    const handleTotalMarksChange = (section: Section): void => {
-        setTotalMarks(section.questions.reduce((sum, q) => sum + q.marks, 0));
-    };
-
-    /**
-     * Updates the question count based on the questions in a section.
-     * 
-     * @param section - The section whose question count is updated.
-     */
-    const handleQuestionCountChange = (section: Section): void => {
-        setQuestionCount(section.questions.length);
-    };
+    const [deletedSectionId, setDeletedSectionId] = useState<string[]>([]);
 
     /**
      * Starts editing the section title.
@@ -71,7 +65,7 @@ export const useSectionManager = (
      */
     const handleSaveTitle = (section: Section): void => {
         if (editedTitle.trim()) {
-            updateSection({ ...section, title: editedTitle });
+            updateSection({ ...section, title: editedTitle, isSectionEdited: true });
             setIsEditing(false);
         }
     };
@@ -98,10 +92,12 @@ export const useSectionManager = (
      */
     const addSection = useCallback((): void => {
         const newSection: Section = {
-            id: `${Math.floor(1000 + Math.random() * 9000)}`,
+            id: generateNumericId(4),
             title: `Section ${sections.length + 1}`,
             questions: [],
             isExpanded: true,
+            isSectionEdited: false,
+            isSectionNew: true,
         };
         setSections((prev) => [...prev, newSection]);
     }, [sections]);
@@ -111,8 +107,9 @@ export const useSectionManager = (
      * 
      * @param sectionId - The ID of the section to delete.
      */
-    const deleteSection = useCallback((sectionId: string): void => {
-        setSections((prev) => prev.filter((s) => s.id !== sectionId));
+    const deleteSection = useCallback((section: Section): void => {
+        setSections((prev) => prev.filter((s) => s.id !== section.id));
+        setDeletedSectionId(prev => [...prev, section.id]);
     }, []);
 
     /**
@@ -124,6 +121,7 @@ export const useSectionManager = (
         setSections((prev) =>
             prev.map((s) => (s.id === updatedSection.id ? updatedSection : s))
         );
+
     }, []);
 
     /**
@@ -146,14 +144,13 @@ export const useSectionManager = (
             editedTitle,
             totalMarks,
             questionCount,
+            deletedSectionId
         },
         sectionActions: {
             addSection,
             deleteSection,
             updateSection,
             toggleSectionExpand,
-            handleTotalMarksChange,
-            handleQuestionCountChange,
             handleStartEditing,
             handleSaveTitle,
             handleCancelEdit,

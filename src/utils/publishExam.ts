@@ -1,15 +1,20 @@
 import { Question, Section, ExamDescription } from "@/types/exam";
 
-import { convertAppDataToExportFormat } from "@/utils/examConverter";
+import { convertAppDataToExportFormat, convertAppDataToExportEditFormat } from "@/utils/examConverter";
+import { useExamPageProps } from "@/hooks/useExamPage";
 
 export interface PublishExamData {
     exam: ExamDescription;
     sections: Section[];
+    state: useExamPageProps["state"];
+    isExamNew: boolean;
 }
 
 export const publishExam = async (data: PublishExamData): Promise<boolean> => {
     const { exam, sections } = data;
-    const exportData = convertAppDataToExportFormat(exam, sections);
+    const exportData = data.isExamNew
+        ? convertAppDataToExportFormat(exam, sections)
+        : convertAppDataToExportEditFormat(exam, sections, data.state);
 
     try {
         const response = await fetch('https://localhost/submit', {

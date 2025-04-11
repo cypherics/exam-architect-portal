@@ -4,13 +4,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { publishExam } from '@/utils/publishExam';
 import { ExamDescription, Section } from '@/types/exam';
+import { useExamPageProps } from "@/hooks/useExamPage";
 
 interface UsePublishExamProps {
     exam: ExamDescription | null;
     sections: Section[];
+    state: useExamPageProps["state"];
+    isExamNew: boolean;
 }
 
-export const usePublishExam = ({ exam, sections }: UsePublishExamProps) => {
+export const usePublishExam = ({ exam, sections, state, isExamNew }: UsePublishExamProps) => {
     const [isPublishing, setIsPublishing] = useState(false);
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -20,7 +23,7 @@ export const usePublishExam = ({ exam, sections }: UsePublishExamProps) => {
 
         setIsPublishing(true);
 
-        const success = await publishExam({ exam, sections });
+        const success = await publishExam({ exam, sections, state, isExamNew });
 
         if (success) {
             toast({
@@ -37,7 +40,7 @@ export const usePublishExam = ({ exam, sections }: UsePublishExamProps) => {
         }
 
         setIsPublishing(false);
-    }, [exam, sections, navigate, toast]);
+    }, [exam, sections, isExamNew, navigate, toast]);
 
     return { isPublishing, handlePublish };
 };

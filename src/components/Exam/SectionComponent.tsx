@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Section } from "@/types/exam";
@@ -7,7 +8,8 @@ import { PlusCircle, Edit, Trash2, Check, X, ChevronDown, ChevronRight } from "l
 import { QuestionCard } from "@/components/Question";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useExamPageContext } from "@/hooks/ExamPageContext";
+import { useExamPageContext } from "@/context/ExamPageContext";
+import { useSectionValues } from "@/hooks/useSectionDerivedValues";
 
 interface SectionComponentProps {
   section: Section;
@@ -16,6 +18,8 @@ interface SectionComponentProps {
 export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
   const { section } = props;
   const { state, actions, setters } = useExamPageContext();
+  const { computedValues } = useSectionValues({ section: section });
+  const { totalMarks, totalQuestions } = computedValues;
 
   return (
     <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
@@ -73,7 +77,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
 
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground mr-2 bg-blue-50/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
-            {state.sectionStates.questionCount} question{state.sectionStates.questionCount !== 1 ? 's' : ''} • {state.sectionStates.totalMarks} marks
+            {totalQuestions} question{totalQuestions !== 1 ? 's' : ''} • {totalMarks} marks
           </div>
 
           <TooltipProvider>
@@ -101,7 +105,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
                   variant="ghost"
                   size="sm"
                   className="h-9 w-9 p-0 rounded-full transition-colors hover:bg-red-100 hover:text-red-700 active:scale-95"
-                  onClick={() => actions.sectionActions.deleteSection(section.id)}
+                  onClick={() => actions.sectionActions.deleteSection(section)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -126,7 +130,8 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
                 >
                   <QuestionCard
                     question={question}
-                    onDelete={() => actions.questionActions.handleDeleteQuestion(question.id, section)}
+                    onDelete={() => actions.questionActions.handleDeleteQuestion(question, section)}
+                    onEdit={() => actions.questionActions.handleEditQuestion(section, question, setters.optionSetters.setOptions)}
                   />
                 </div>
               ))}
@@ -139,7 +144,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
         )}
 
         <Button
-          onClick={() => actions.questionActions.handleAddQuestion(section.id)}
+          onClick={() => actions.questionActions.handleAddQuestion(section)}
           variant="outline"
           className="flex items-center gap-2 w-full mt-4 transition-all duration-300 bg-gradient-to-r from-blue-50 to-sky-50 hover:from-blue-100 hover:to-sky-100 hover:border-blue-300 shadow-sm active:scale-[0.99]"
         >

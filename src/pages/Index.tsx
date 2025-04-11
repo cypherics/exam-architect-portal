@@ -13,9 +13,7 @@ import { useIndexPage } from "@/hooks/useIndexPage";
  */
 const Index: React.FC = () => {
   const {
-    state: { examDetails, sections, importError, showNewExamDialog, showImportExamDialog },
-    actions: { createExam, handleFileChange },
-    setters: { setExamDetails, setShowNewExamDialog, setShowImportExamDialog }
+    state, actions, setters
   } = useIndexPage();
 
   return (
@@ -52,7 +50,7 @@ const Index: React.FC = () => {
               Start from scratch and design a new exam with custom sections and questions
             </p>
             <Button
-              onClick={() => setShowNewExamDialog(true)}
+              onClick={() => setters.setShowNewExamDialog(true)}
               size="lg"
               className="btn-hover text-base px-8 py-6 h-auto font-medium rounded-xl"
             >
@@ -72,7 +70,7 @@ const Index: React.FC = () => {
               Import an existing exam from JSON file to continue working on it
             </p>
             <Button
-              onClick={() => setShowImportExamDialog(true)}
+              onClick={() => setters.setShowImportExamDialog(true)}
               variant="outline"
               size="lg"
               className="btn-hover text-base px-8 py-6 h-auto font-medium rounded-xl border-primary/30 hover:border-primary"
@@ -84,25 +82,25 @@ const Index: React.FC = () => {
       </main>
 
       {/* Dialogs */}
-      <Dialog open={showNewExamDialog} onOpenChange={setShowNewExamDialog}>
+      <Dialog open={state.showNewExamDialog} onOpenChange={setters.setShowNewExamDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Exam</DialogTitle>
           </DialogHeader>
           <ExamForm
-            exam={examDetails}
-            onChange={setExamDetails}
-            onSubmit={() => createExam(examDetails)}
-            onCancel={() => setShowNewExamDialog(false)}
+            exam={state.examDetails}
+            onChange={setters.setExamDetails}
+            onSubmit={() => actions.createExam(state.examDetails)}
+            onCancel={() => setters.setShowNewExamDialog(false)}
           />
         </DialogContent>
       </Dialog>
 
       <ImportExamDialog
-        open={showImportExamDialog}
-        onOpenChange={setShowImportExamDialog}
-        onFileImport={handleFileChange}
-        importError={importError}
+        open={state.showImportExamDialog}
+        onOpenChange={setters.setShowImportExamDialog}
+        onFileImport={actions.EditExam}
+        importError={state.importError}
       />
     </div>
   );
