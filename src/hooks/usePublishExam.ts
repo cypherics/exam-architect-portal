@@ -1,46 +1,55 @@
-// hooks/usePublishExam.ts
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { publishExam } from '@/utils/publishExam';
-import { ExamDescription, Section } from '@/types/exam';
 import { useExamPageProps } from "@/hooks/useExamPage";
 
 interface UsePublishExamProps {
-    exam: ExamDescription | null;
-    sections: Section[];
     state: useExamPageProps["state"];
     isExamNew: boolean;
 }
 
-export const usePublishExam = ({ exam, sections, state, isExamNew }: UsePublishExamProps) => {
+export const usePublishExam = ({ state, isExamNew }: UsePublishExamProps) => {
     const [isPublishing, setIsPublishing] = useState(false);
     const navigate = useNavigate();
     const { toast } = useToast();
 
-    const handlePublish = useCallback(async () => {
-        if (!exam) return;
+    const showSuccessToast = () => {
+        toast({
+            title: 'Exam Published',
+            description: 'Your exam has been successfully published.',
+        });
+    };
+
+    const showFailureToast = () => {
+        toast({
+            title: 'Publish Failed',
+            description: 'Failed to publish your exam. Please try again.',
+            variant: 'destructive',
+        });
+    };
+
+    const handlePublish = useCallback(async (): Promise<void> => {
+        if (!state.currentExam) return;
 
         setIsPublishing(true);
 
-        const success = await publishExam({ exam, sections, state, isExamNew });
+        try {
+            const success = await publishExam({ state, isExamNew });
 
-        if (success) {
-            toast({
-                title: 'Exam Published',
-                description: 'Your exam has been successfully published.',
-            });
-            navigate('/');
-        } else {
-            toast({
-                title: 'Publish Failed',
-                description: 'Failed to publish your exam. Please try again.',
-                variant: 'destructive',
-            });
+            if (success) {
+                showSuccessToast();
+                navigate('/');
+            } else {
+                showFailureToast();
+            }
+        } catch (err) {
+            console.error('Unexpected error during publish:', err);
+            showFailureToast();
+        } finally {
+            setIsPublishing(false);
         }
-
-        setIsPublishing(false);
-    }, [exam, sections, isExamNew, navigate, toast]);
+    }, [state, isExamNew, navigate, toast]);
 
     return { isPublishing, handlePublish };
 };

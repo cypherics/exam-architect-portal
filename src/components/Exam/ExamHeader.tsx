@@ -37,7 +37,7 @@ const ExamHeader: React.FC<ExamHeaderProps> = ({ }) => {
                 </div>
 
                 <div>
-                    <PublishButton exam={state.currentExam} sections={state.sectionStates.sections} />
+                    <PublishButton />
                 </div>
             </div>
         </div>
