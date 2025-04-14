@@ -8,7 +8,7 @@ export interface PublishExamData {
     isExamNew: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_EXAM_API_URL || "https://localhost";
+const API_BASE_URL = "https://localhost";
 
 /**
  * Sends a POST request to create a new exam.
