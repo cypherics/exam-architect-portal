@@ -2,6 +2,9 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import { Label } from 'src/components/ui/label';
 import { Input } from "@/components/ui/input";
 import { Section } from "@/types/exam";
 import { PlusCircle, Edit, Trash2, Check, X, ChevronDown, ChevronRight } from "lucide-react";
@@ -10,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useExamPageContext } from "@/context/ExamPageContext";
 import { useSectionValues } from "@/hooks/useSectionDerivedValues";
+import { varAlpha } from 'minimal-shared/utils';
+
 
 interface SectionComponentProps {
   section: Section;
@@ -21,21 +26,28 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
   const { computedValues } = useSectionValues({ section: section });
   const { totalMarks, totalQuestions } = computedValues;
 
+  const STATUS_OPTIONS = [
+    { value: 'all', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'banned', label: 'Banned' },
+  ];
+
+  const [currentFilters, setCurrentFilters] = useState({ status: 'all' });
+
+  const handleFilterStatus = (event: React.SyntheticEvent, newValue: string) => {
+  setCurrentFilters((prev) => ({ ...prev, status: newValue }));
+};
+
+const tableData = [
+  { id: 1, name: 'Alice', status: 'active' },
+  { id: 2, name: 'Bob', status: 'pending' },
+];
+
   return (
     <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-0 h-9 w-9 rounded-full transition-all duration-300 hover:bg-blue-100"
-            onClick={() => actions.sectionActions.toggleSectionExpand(section.id)}
-          >
-            {section.isExpanded ?
-              <ChevronDown className="h-5 w-5 transition-transform duration-300" /> :
-              <ChevronRight className="h-5 w-5 transition-transform duration-300" />}
-          </Button>
-
           {state.sectionStates.isEditing ? (
             <div className="flex items-center gap-2 scale-in">
               <Input
@@ -120,7 +132,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
 
       <div className={`overflow-hidden transition-all duration-500 ease-in-out ${section.isExpanded ? 'max-h-[2000px]' : 'max-h-0'}`}>
         {section.questions.length > 0 ? (
-          <ScrollArea className="max-h-[60vh] pr-4 ml-4 pt-2 overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+          <ScrollArea className="pr-4 ml-4 pt-2">
             <div className="space-y-4">
               {section.questions.map((question, index) => (
                 <div

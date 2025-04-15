@@ -5,12 +5,16 @@ import SectionComponent from "./SectionComponent";
 import { Section, ExamDescription } from "@/types/exam";
 import { useExamPageContext } from "@/context/ExamPageContext";
 import { useSectionDerivedValues } from "@/hooks/useSectionDerivedValues";
+import { SectionTabs } from "@/components/SectionTabs";
+import { useState } from "react";
 
 import React from "react";
 
 interface ExamMainProps { }
 
 const ExamMain: React.FC<ExamMainProps> = ({ }) => {
+    const [currentTab, setCurrentTab] = useState(0);
+
     const { state, actions, setters } = useExamPageContext();
 
     const { computedValues } = useSectionDerivedValues({ exam: state.currentExam, sections: state.sectionStates.sections });
@@ -41,14 +45,18 @@ const ExamMain: React.FC<ExamMainProps> = ({ }) => {
                 </Button>
             </div>
 
-            <div className="space-y-4">
-                {state.sectionStates.sections.map((section) => (
-                    <SectionComponent
-                        key={section.id}
-                        section={section}
-                    />
-                ))}
-            </div>
+            {state.sectionStates.sections.length > 0 && (
+                <>
+                <SectionTabs
+                    sections={state.sectionStates.sections}
+                    currentTab={currentTab}
+                    setCurrentTab={setCurrentTab}
+                />
+                <SectionComponent
+                    section={state.sectionStates.sections[currentTab]}
+                />
+            </>
+)}
 
             {state.sectionStates.sections.length === 0 && (
                 <div className="text-center py-16 border-2 border-dashed border-muted rounded-xl">
