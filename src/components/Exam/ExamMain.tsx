@@ -13,8 +13,6 @@ import React from "react";
 interface ExamMainProps { }
 
 const ExamMain: React.FC<ExamMainProps> = ({ }) => {
-    const [currentTab, setCurrentTab] = useState(0);
-
     const { state, actions, setters } = useExamPageContext();
 
     const { computedValues } = useSectionDerivedValues({ exam: state.currentExam, sections: state.sectionStates.sections });
@@ -47,16 +45,10 @@ const ExamMain: React.FC<ExamMainProps> = ({ }) => {
 
             {state.sectionStates.sections.length > 0 && (
                 <>
-                <SectionTabs
-                    sections={state.sectionStates.sections}
-                    currentTab={currentTab}
-                    setCurrentTab={setCurrentTab}
-                />
-                <SectionComponent
-                    section={state.sectionStates.sections[currentTab]}
-                />
-            </>
-)}
+                    <SectionTabs />
+                    <SectionComponent />
+                </>
+            )}
 
             {state.sectionStates.sections.length === 0 && (
                 <div className="text-center py-16 border-2 border-dashed border-muted rounded-xl">

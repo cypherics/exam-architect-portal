@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Section } from "@/types/exam";
 import { generateNumericId } from "@/utils/idGenerator";
+import { set } from "date-fns";
 
 
 export const defaultSection = () => ({
@@ -21,6 +22,8 @@ export interface useSectionManagerProps {
         totalMarks: number;
         questionCount: number;
         deletedSectionId: string[];
+        currentSectionTab: number;
+        totalSections: number;
     };
     sectionActions: {
         addSection: () => void;
@@ -31,6 +34,8 @@ export interface useSectionManagerProps {
         handleSaveTitle: (section: Section) => void;
         handleCancelEdit: (section: Section) => void;
         handleTitleChange: (value: string) => void;
+        handleSetCurrentSectionTab: (value: number) => void;
+        handleSetTotalSection: (value: number) => void;
     };
     sectionSetters: {
         setSections: React.Dispatch<React.SetStateAction<Section[]>>;
@@ -52,7 +57,10 @@ export const useSectionManager = (
     const [totalMarks, setTotalMarks] = useState<number>(0);
     const [questionCount, setQuestionCount] = useState<number>(0);
     const [deletedSectionId, setDeletedSectionId] = useState<string[]>([]);
-
+    const [currentSectionTab, setCurrentsectionTab] = useState(0);
+    const [totalSections, setTotalSections] = useState<number>(
+        initialSections?.length ?? 0
+    );
     /**
      * Starts editing the section title.
      */
@@ -100,7 +108,10 @@ export const useSectionManager = (
             isSectionNew: true,
         };
         setSections((prev) => [...prev, newSection]);
-    }, [sections]);
+        handleSetTotalSection(totalSections + 1);
+        handleSetCurrentSectionTab(totalSections);
+        console.log("currentTab", currentSectionTab);
+    }, [sections, currentSectionTab, totalSections]);
 
     /**
      * Deletes a section by its ID.
@@ -110,7 +121,13 @@ export const useSectionManager = (
     const deleteSection = useCallback((section: Section): void => {
         setSections((prev) => prev.filter((s) => s.id !== section.id));
         setDeletedSectionId(prev => [...prev, section.id]);
-    }, []);
+        if (currentSectionTab > 0) {
+            handleSetCurrentSectionTab(currentSectionTab - 1);
+        }
+
+        handleSetTotalSection(totalSections - 1);
+
+    }, [currentSectionTab, totalSections]);
 
     /**
      * Updates an existing section.
@@ -137,6 +154,28 @@ export const useSectionManager = (
         );
     }, []);
 
+    /**
+ * Toggles the expanded state of a section.
+ * 
+ * @param value - The ID of the section to toggle.
+ */
+    const handleSetCurrentSectionTab = useCallback((value: number): void => {
+        setCurrentsectionTab(value);
+        console.log("currentTab", currentSectionTab);
+    }, [setCurrentsectionTab, currentSectionTab]);
+
+
+    /**
+* Toggles the expanded state of a section.
+* 
+* @param value - The ID of the section to toggle.
+*/
+    const handleSetTotalSection = useCallback((value: number): void => {
+        console.log("sections lenght", value);
+        setTotalSections(value);
+    }, [setTotalSections, sections, totalSections]);
+
+
     return {
         sectionStates: {
             sections,
@@ -144,7 +183,9 @@ export const useSectionManager = (
             editedTitle,
             totalMarks,
             questionCount,
-            deletedSectionId
+            deletedSectionId,
+            currentSectionTab,
+            totalSections,
         },
         sectionActions: {
             addSection,
@@ -155,6 +196,8 @@ export const useSectionManager = (
             handleSaveTitle,
             handleCancelEdit,
             handleTitleChange,
+            handleSetCurrentSectionTab,
+            handleSetTotalSection,
         },
         sectionSetters: {
             setSections,

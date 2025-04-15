@@ -16,13 +16,12 @@ import { useSectionValues } from "@/hooks/useSectionDerivedValues";
 import { varAlpha } from 'minimal-shared/utils';
 
 
-interface SectionComponentProps {
-  section: Section;
-}
+interface SectionComponentProps { }
 
-export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
-  const { section } = props;
+export const SectionComponent: React.FC<SectionComponentProps> = () => {
   const { state, actions, setters } = useExamPageContext();
+  const section = state.sectionStates.sections[state.sectionStates.currentSectionTab];
+
   const { computedValues } = useSectionValues({ section: section });
   const { totalMarks, totalQuestions } = computedValues;
 
@@ -36,56 +35,17 @@ export const SectionComponent: React.FC<SectionComponentProps> = (props) => {
   const [currentFilters, setCurrentFilters] = useState({ status: 'all' });
 
   const handleFilterStatus = (event: React.SyntheticEvent, newValue: string) => {
-  setCurrentFilters((prev) => ({ ...prev, status: newValue }));
-};
+    setCurrentFilters((prev) => ({ ...prev, status: newValue }));
+  };
 
-const tableData = [
-  { id: 1, name: 'Alice', status: 'active' },
-  { id: 2, name: 'Bob', status: 'pending' },
-];
+  const tableData = [
+    { id: 1, name: 'Alice', status: 'active' },
+    { id: 2, name: 'Bob', status: 'pending' },
+  ];
 
   return (
     <div className="section-container bg-gradient-to-b from-blue-50 to-white rounded-xl shadow-elevation hover:shadow-lg transition-all duration-300 transform ">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {state.sectionStates.isEditing ? (
-            <div className="flex items-center gap-2 scale-in">
-              <Input
-                value={state.sectionStates.editedTitle}
-                onChange={(e) => actions.sectionActions.handleTitleChange(e.target.value)}
-                className="h-9 py-1 border-b-2 border-primary bg-blue-50/50 rounded-md focus:ring-2 focus:ring-primary/20"
-                autoFocus
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={() => actions.sectionActions.handleSaveTitle(section)} className="transition-all duration-200 hover:bg-green-100 hover:text-green-700">
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Save changes</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="ghost" onClick={() => actions.sectionActions.handleCancelEdit(section)} className="transition-all duration-200 hover:bg-red-100 hover:text-red-700">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Cancel editing</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ) : (
-            <h3 className="font-semibold text-lg text-gradient-primary">{section.title}</h3>
-          )}
-        </div>
 
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground mr-2 bg-blue-50/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
